@@ -25,7 +25,7 @@ export class AuthService {
           email: body.email,
           password: hashedPassword,
           name: body.name,
-          phoneNumber: body.number,
+          phoneNumber: body.phoneNumber,
           roleId: clientRoleId,
         },
         omit: {
