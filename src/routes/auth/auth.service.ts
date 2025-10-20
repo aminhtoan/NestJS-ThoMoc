@@ -1,3 +1,4 @@
+import { ResgisterBodyType } from './auth.model'
 import { TokenService } from './../../shared/services/token.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { HashinngService } from './../../shared/services/hashinng.service'
@@ -6,33 +7,27 @@ import { PrismaClient } from '@prisma/client/extension'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
 import { RolesService } from './roles.service'
+import { AuthRespository } from './auth.repo'
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly hashinngService: HashinngService,
-    private readonly prismaService: PrismaService,
-    private readonly tokenService: TokenService,
+    private readonly authRespository: AuthRespository,
     private readonly rolesService: RolesService,
   ) {}
 
-  async register(body: any) {
+  async register(body: ResgisterBodyType) {
     try {
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashinngService.hash(body.password)
-      const user = await this.prismaService.user.create({
-        data: {
-          email: body.email,
-          password: hashedPassword,
-          name: body.name,
-          phoneNumber: body.phoneNumber,
-          roleId: clientRoleId,
-        },
-        omit: {
-          password: true,
-          totpSecret: true,
-        },
-      })
+      const { confirmPassword, ...restBody } = body
+      const userData = {
+        ...restBody,
+        roleId: clientRoleId, // Add the role ID
+        password: hashedPassword, // Override the plain password with the hashed one
+      }
+      const user = await this.authRespository.createUser(userData)
       return user
     } catch (error) {
       if (isUniqueConstraintError(error)) {
