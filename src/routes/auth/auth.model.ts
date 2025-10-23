@@ -1,12 +1,6 @@
 import { TypeofVerificationCodeType, UserStatus } from 'src/shared/constants/auth.constant'
 import { z } from 'zod'
 
-// export enum UserStatus {
-//   ACTIVE = 'ACTIVE',
-//   INACTIVE = 'INACTIVE',
-//   BLOCKED = 'BLOCKED',
-// }
-
 const UserSchema = z.object({
   id: z.number(),
   email: z.string().email(),
@@ -37,6 +31,7 @@ export const ResgisterBodySchema = UserSchema.pick({
 })
   .extend({
     confirmPassword: z.string().min(6).max(50),
+    code: z.string().length(6),
   })
   .strict()
   .superRefine(({ confirmPassword, password }, ctx) => {

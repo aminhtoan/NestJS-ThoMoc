@@ -13,6 +13,7 @@ import { addMilliseconds } from 'date-fns'
 import envConfig from 'src/shared/config'
 import ms from 'ms'
 import { type StringValue } from 'ms'
+import { TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
 
 @Injectable()
 export class AuthService {
@@ -25,16 +26,38 @@ export class AuthService {
 
   async register(body: ResgisterBodyType) {
     try {
+      const verificationCode = await this.authRespository.findUniqueVerificationCode({
+        email: body.email,
+        code: body.code,
+        type: TypeofVerificationCodeType.REGISTER,
+      })
+
+      if (!verificationCode) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã OTP không hợp lệ',
+            path: 'code',
+          },
+        ])
+      }
+      if (verificationCode.expiresAt < new Date()) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã OTP đã hết hạn',
+            path: 'code',
+          },
+        ])
+      }
+
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashinngService.hash(body.password)
-      const { confirmPassword, ...restBody } = body
+      const { confirmPassword, code, ...restBody } = body
       const userData = {
         ...restBody,
         roleId: clientRoleId, // Add the role ID
         password: hashedPassword, // Override the plain password with the hashed one
       }
 
-      // if()
       const user = await this.authRespository.createUser(userData)
       return user
     } catch (error) {
@@ -71,7 +94,8 @@ export class AuthService {
       })
       return verificationCode
     } catch (error) {
-      console.log(error)
+      console.error('Send OTP Error:', error)
+      throw error
     }
   }
   // async login(body: LoginDTO) {
