@@ -1,3 +1,4 @@
+import { OTPEmail } from '../../../emails/plaid-verify-identity';
 import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 import { Resend } from 'resend'
 import envConfig from '../config'
@@ -19,10 +20,10 @@ export class SendEmail {
       htmlTemplate = htmlTemplate.replace('{{subject}}', subject)
 
       const data = await this.resend.emails.send({
-        from: 'Nestjs Ecomerce <no-reply@miti.io.vn>',
+        from: 'Thổ Mộc <no-reply@miti.io.vn>',
         to: [payload.email],
         subject,
-        html: htmlTemplate,
+        react: <OTPEmail  otpCode={payload.code} titlee= {subject} />
       })
       return data
     } catch (error) {
