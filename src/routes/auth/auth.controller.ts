@@ -19,9 +19,9 @@ export class AuthController {
   async sendOTP(@Body() body: SendOTPBodyDTO) {
     return await this.authService.sendOTP(body)
   }
-
+ 
   @Post('login')
-  login(@Body() body: LoginBodyDTO, @IP() ip: string, @UserAgent() userAgent: string) {
+  login(@Body() body: LoginBodyDTO, @Ip() ip: string, @UserAgent() userAgent: string) {
     return this.authService.login({ ...body, ip, userAgent })
   }
 

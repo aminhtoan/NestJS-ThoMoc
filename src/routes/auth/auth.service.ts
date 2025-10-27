@@ -116,6 +116,7 @@ export class AuthService {
   }
 
   async login(body: LoginBodyDTO & { ip: string; userAgent: string }) {
+    console.log(JSON.stringify({ now: new Date() }))
     const user = await this.authRespository.findUniqueUserIncludeRole({
       email: body.email,
     })
