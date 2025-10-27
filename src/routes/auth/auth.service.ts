@@ -15,7 +15,7 @@ import ms from 'ms'
 import { type StringValue } from 'ms'
 import { TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { SendEmail } from 'src/shared/services/email.service'
-import { LoginBodyDTO } from './auth.dto'
+import { LoginBodyDTO, RefreshTokenBodyDTO } from './auth.dto'
 import { AccessTokenPayLoadCreate } from 'src/shared/types/jwt.type'
 
 @Injectable()
@@ -171,29 +171,53 @@ export class AuthService {
     return { accessToken, refreshToken }
   }
 
-  // async refreshToken(refreshToken: string) {
-  //   try {
-  //     // kiển tra token có đúng ko
-  //     const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
+  async refreshToken({ refreshToken, ip, userAgent }: RefreshTokenBodyDTO & { ip: string; userAgent: string }) {
+    try {
+      // kiển tra refreshToken để kiểm tra hợp lệ và lấy ra userId
+      const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
 
-  //     // kiển tra token có trong db ko
-  //     await this.prismaService.refreshToken.findUniqueOrThrow({
-  //       where: { token: refreshToken },
-  //     })
+      // kiển tra refreshToken tồn tại trong database ko
+      const ref = await this.authRespository.findUniqueRefreshTokenInlcudeUserRole({
+        token: refreshToken,
+      })
 
-  //     await this.prismaService.refreshToken.delete({
-  //       where: { token: refreshToken },
-  //     })
+      // nếu token ko tồn tại =>> nó đã bị revoked hoặc đánh cắp
+      if (!ref) {
+        throw new UnauthorizedException('Refresh token has been revoked')
+      }
 
-  //     return await this.generateToken({ userId })
-  //   } catch (error) {
-  //     // refeshtoken bị đánh cắp
-  //     if (isRecordNotFoundError(error)) {
-  //       throw new UnauthorizedException('Refresh token has been revoked')
-  //     }
-  //     throw new UnauthorizedException('Invalid refresh token')
-  //   }
-  // }
+      // lấy thông tin deviceId , roleId, rolName
+      const {
+        deviceId,
+        user: { roleId, name: roleName },
+      } = ref
+
+      // update device
+      await this.authRespository.updateDevice(deviceId, {
+        ip,
+        userAgent,
+      })
+
+      // xóa đi refresh token cữ nên mới có lỗi trễn
+      await this.authRespository.deleteRefreshToken({
+        token: refreshToken,
+      })
+
+      const tokens = await this.generateToken({
+        userId,
+        deviceId,
+        roleId,
+        roleName,
+      })
+      return tokens
+    } catch (error) {
+      // refeshtoken bị đánh cắp
+      if (isRecordNotFoundError(error)) {
+        throw new UnauthorizedException('Refresh token has been revoked')
+      }
+      throw error
+    }
+  }
 
   // async logout(refreshToken: string) {
   //   try {

@@ -4,6 +4,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   DeiviceType,
   RefreshTokenBodyType,
+  RefreshTokenType,
   RefresTokenResType,
   ResgisterBodyType,
   RoleType,
@@ -71,6 +72,36 @@ export class AuthRespository {
       include: {
         role: true,
       },
+    })
+  }
+
+  async findUniqueRefreshTokenInlcudeUserRole(uniqueObject: {
+    token: string
+  }): Promise<(RefreshTokenType & { user: UserType & { role: RoleType } }) | null> {
+    return this.prismaService.refreshToken.findUnique({
+      where: uniqueObject,
+      include: {
+        user: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    })
+  }
+
+  async updateDevice(deviceId: number, data: Partial<DeiviceType>): Promise<DeiviceType> {
+    return this.prismaService.device.update({
+      where: {
+        id: deviceId,
+      },
+      data,
+    })
+  }
+
+  async deleteRefreshToken(uniqueObject: { token: string }): Promise<RefreshTokenType> {
+    return this.prismaService.refreshToken.delete({
+      where: uniqueObject,
     })
   }
 }
