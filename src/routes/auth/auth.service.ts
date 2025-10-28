@@ -219,26 +219,31 @@ export class AuthService {
     }
   }
 
-  // async logout(refreshToken: string) {
-  //   try {
-  //     // kiển tra token có đúng ko
-  //     await this.tokenService.verifyRefreshToken(refreshToken)
+  async logout(refreshToken: string) {
+    try {
+      // kiển tra token có đúng ko
+      await this.tokenService.verifyRefreshToken(refreshToken)
 
-  //     // kiển tra token có trong db ko
-  //     await this.prismaService.refreshToken.findUniqueOrThrow({
-  //       where: { token: refreshToken },
-  //     })
+      // kiển tra token có trong db ko
+      await this.authRespository.findUniqueRefreshTokenInlcudeUserRole({ token: refreshToken })
 
-  //     await this.prismaService.refreshToken.delete({
-  //       where: { token: refreshToken },
-  //     })
-  //     return { message: 'Logout successful' }
-  //   } catch (error) {
-  //     // refeshtoken bị đánh cắp
-  //     if (isRecordNotFoundError(error)) {
-  //       throw new UnauthorizedException('Refresh token has been revoked')
-  //     }
-  //     throw new UnauthorizedException('Invalid refresh token')
-  //   }
-  // }
+      // xóa refreshToekn
+      const ref = await this.authRespository.deleteRefreshToken({
+        token: refreshToken,
+      })
+
+      // cập nhật lại device
+      await this.authRespository.updateDevice(ref.deviceId, {
+        isActive: false,
+      })
+
+      return { message: 'Logout successful' }
+    } catch (error) {
+      // refeshtoken bị đánh cắp
+      if (isRecordNotFoundError(error)) {
+        throw new UnauthorizedException('Refresh token đã đc sử dụng')
+      }
+      throw new UnauthorizedException()
+    }
+  }
 }

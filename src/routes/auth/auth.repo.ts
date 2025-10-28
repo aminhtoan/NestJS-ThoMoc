@@ -3,12 +3,9 @@ import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   DeiviceType,
-  RefreshTokenBodyType,
   RefreshTokenType,
-  RefresTokenResType,
   ResgisterBodyType,
   RoleType,
-  SendOTPBodyType,
   UserType,
   VerificationCodeType,
 } from './auth.model'
