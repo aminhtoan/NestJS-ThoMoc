@@ -15,7 +15,10 @@ export class GoogleService {
   }
 
   async getGoogleLink({ ip, userAgent }: GoogleAuthStateType) {
-    const scope = encodeURIComponent('email profile')
+    const scopes = [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+    ]
 
     // Chuyển Object sang string và mã hóa base64
     const state = Buffer.from(JSON.stringify({ ip, userAgent, timestamp: Date.now() })).toString('base64')
@@ -24,7 +27,7 @@ export class GoogleService {
     const url = this.oauth2Client.generateAuthUrl({
       access_type: 'offline', // để lấy refresh_token
       prompt: 'consent', // bắt buộc chọn tài khoản mỗi lần
-      scope: scope,
+      scope: scopes,
       state: state,
     })
     return { url }
