@@ -1,9 +1,12 @@
-import { NestFactory } from '@nestjs/core'
+import { NestFactory, Reflector } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
+import { JwtAuthGuard } from './shared/guards/jwt-auth.guard'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+  const reflector = app.get(Reflector)
+  app.useGlobalGuards(new JwtAuthGuard(reflector))
 
   const config = new DocumentBuilder()
     .setTitle('NestJS E-commerce')

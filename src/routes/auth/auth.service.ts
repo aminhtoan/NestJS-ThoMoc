@@ -1,27 +1,23 @@
-import { ResgisterBodyType, SendOTPBodyType } from './auth.model'
-import { TokenService } from './../../shared/services/token.service'
-import { PrismaService } from 'src/shared/services/prisma.service'
-import { HashinngService } from './../../shared/services/hashinng.service'
-import { ConflictException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
-import { PrismaClient } from '@prisma/client/extension'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
-import { generateOTP, isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
-import { RolesService } from './roles.service'
-import { AuthRespository } from './auth.repo'
-import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 import { addMilliseconds } from 'date-fns'
+import ms, { type StringValue } from 'ms'
 import envConfig from 'src/shared/config'
-import ms from 'ms'
-import { type StringValue } from 'ms'
-import { TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
+import { TypeofVerificationCode, TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
+import { generateOTP, isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
+import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { SendEmail } from 'src/shared/services/email.service'
-import { LoginBodyDTO, RefreshTokenBodyDTO } from './auth.dto'
 import { AccessTokenPayLoadCreate } from 'src/shared/types/jwt.type'
+import { TokenService } from './../../shared/services/token.service'
+import { LoginBodyDTO, RefreshTokenBodyDTO } from './auth.dto'
+import { ForgotPasswordType, ResgisterBodyType, SendOTPBodyType } from './auth.model'
+import { AuthRespository } from './auth.repo'
+import { RolesService } from './roles.service'
+import { HashingService } from 'src/shared/services/hashing.service'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly hashinngService: HashinngService,
+    private readonly hashingService: HashingService,
     private readonly authRespository: AuthRespository,
     private readonly rolesService: RolesService,
     private readonly sharedUserRepository: SharedUserRepository,
@@ -29,41 +25,79 @@ export class AuthService {
     private readonly tokenService: TokenService,
   ) {}
 
+  async validateVerificationCode({
+    email,
+    code,
+    type,
+  }: {
+    email: string
+    code: string
+    type: TypeofVerificationCodeType
+  }) {
+    // kiểm tra code có tồn tại không
+    const verificationCode = await this.authRespository.findUniqueVerificationCode({
+      email: email,
+      code: code,
+      type: type,
+    })
+
+    if (!verificationCode) {
+      throw new UnprocessableEntityException([
+        {
+          message: 'Mã OTP không hợp lệ',
+          path: 'code',
+        },
+      ])
+    }
+
+    // kiểm tra hạn của otp 5m so với giờ hiện tại
+    if (verificationCode.expiresAt < new Date()) {
+      throw new UnprocessableEntityException([
+        {
+          message: 'Mã OTP đã hết hạn',
+          path: 'code',
+        },
+      ])
+    }
+
+    return verificationCode
+  }
+
   async register(body: ResgisterBodyType) {
     try {
-      const verificationCode = await this.authRespository.findUniqueVerificationCode({
+      // tạo verification code và kiểm tra ...
+      await this.validateVerificationCode({
         email: body.email,
         code: body.code,
-        type: TypeofVerificationCodeType.REGISTER,
+        type: TypeofVerificationCode.REGISTER,
       })
 
-      if (!verificationCode) {
-        throw new UnprocessableEntityException([
-          {
-            message: 'Mã OTP không hợp lệ',
-            path: 'code',
-          },
-        ])
-      }
-      if (verificationCode.expiresAt < new Date()) {
-        throw new UnprocessableEntityException([
-          {
-            message: 'Mã OTP đã hết hạn',
-            path: 'code',
-          },
-        ])
-      }
-
+      // lấy ra role id, role đc mặc định sãn là client || còn có seller và admin
       const clientRoleId = await this.rolesService.getClientRoleId()
-      const hashedPassword = await this.hashinngService.hash(body.password)
+
+      // hash password
+      const hashedPassword = await this.hashingService.hash(body.password)
+
+      // desttructuring, loại bỏ  confirmPassword, code
       const { confirmPassword, code, ...restBody } = body
+
+      // spread operator để trải dữ liệu ra
       const userData = {
         ...restBody,
-        roleId: clientRoleId, // Add the role ID
-        password: hashedPassword, // Override the plain password with the hashed one
+        roleId: clientRoleId,
+        password: hashedPassword,
       }
 
+      // tạo user
       const user = await this.authRespository.createUser(userData)
+
+      // xóa otp code vừa đăng ký để an toàn
+      await this.authRespository.deleleVerificationCode({
+        email: body.email,
+        code: body.code,
+        type: TypeofVerificationCode.REGISTER,
+      })
+
       return user
     } catch (error) {
       if (isUniqueConstraintError(error)) {
@@ -81,7 +115,8 @@ export class AuthService {
   async sendOTP(body: SendOTPBodyType) {
     try {
       const user = await this.sharedUserRepository.findUnique({ email: body.email })
-      if (user) {
+
+      if (user && body.type === TypeofVerificationCode.REGISTER) {
         throw new UnprocessableEntityException([
           {
             message: 'Email đã tồn tại',
@@ -90,8 +125,20 @@ export class AuthService {
         ])
       }
 
+      if (!user && body.type === TypeofVerificationCode.FORGOT_PASSWORD) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Không tìm thấy email',
+            path: 'email',
+          },
+        ])
+      }
+
+      // gernerate OTP 6 số ngẫu nhiên
       const code = generateOTP()
-      const verificationCode = await this.authRespository.createVerification({
+
+      // tạo verification code với hạn là 5m
+      await this.authRespository.createVerification({
         email: body.email,
         code,
         type: body.type,
@@ -100,6 +147,7 @@ export class AuthService {
 
       // Gửi mã otp
       const { error } = await this.sendEmail.sendEmail({ email: body.email, code: code })
+
       if (error) {
         throw new UnprocessableEntityException([
           {
@@ -108,24 +156,29 @@ export class AuthService {
           },
         ])
       }
-      return verificationCode
+
+      return {
+        message: 'Gửi mã OTP thành công',
+      }
     } catch (error) {
-      console.error('Send OTP Error:', error)
+      console.error('[AuthService:SendOTP]', error)
       throw error
     }
   }
 
   async login(body: LoginBodyDTO & { ip: string; userAgent: string }) {
-    console.log(JSON.stringify({ now: new Date() }))
+    // kiểm tra email có tồn tại
     const user = await this.authRespository.findUniqueUserIncludeRole({
       email: body.email,
     })
 
     if (!user) {
-      throw new UnauthorizedException('Email not exist')
+      throw new UnauthorizedException('Email không tồn tại')
     }
 
-    const isPasswordMatch = await this.hashinngService.compare(body.password, user.password)
+    // check password có đúng không
+    const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
+
     if (!isPasswordMatch) {
       throw new UnprocessableEntityException([
         {
@@ -134,40 +187,51 @@ export class AuthService {
         },
       ])
     }
+
+    // lưu userId, địa chỉ ip, userAgent là kiểu mo tả thiết bị của bạn đang sử dụng phần mềm nào ....
     const device = await this.authRespository.createDevice({
       userId: user.id,
       ip: body.ip,
       userAgent: body.userAgent,
     })
 
+    // tạo ra accesstoken và refreshtoken
     const tokens = await this.generateToken({
       userId: user.id,
       deviceId: device.id,
       roleId: user.roleId,
       roleName: user.role.name,
     })
+
     return tokens
   }
 
   async generateToken(payload: AccessTokenPayLoadCreate) {
+    // dùng promise. all để chạy 2 cái cùng lúc ko cần dùng await
     const [accessToken, refreshToken] = await Promise.all([
+      // tạo accesstoken
       this.tokenService.signAccessToken({
         userId: payload.userId,
         deviceId: payload.deviceId,
         roleId: payload.roleId,
         roleName: payload.roleName,
       }),
+
+      // tạo refreshtoken
       this.tokenService.signRefeshToken({ userId: payload.userId }),
     ])
 
+    // kiểm tra refresh token có hợp lệ không
     const decodedRefrestoken = await this.tokenService.verifyRefreshToken(refreshToken)
 
+    // tạo lại refresh token
     await this.authRespository.createRefreshToken({
       token: refreshToken,
       userId: payload.userId,
       expiresAt: new Date(decodedRefrestoken.exp * 1000),
       deviceId: payload.deviceId,
     })
+
     return { accessToken, refreshToken }
   }
 
@@ -183,7 +247,7 @@ export class AuthService {
 
       // nếu token ko tồn tại =>> nó đã bị revoked hoặc đánh cắp
       if (!ref) {
-        throw new UnauthorizedException('Refresh token has been revoked')
+        throw new UnauthorizedException('Refresh token dẫ bị thu hồi')
       }
 
       // lấy thông tin deviceId , roleId, rolName
@@ -211,10 +275,7 @@ export class AuthService {
       })
       return tokens
     } catch (error) {
-      // refeshtoken bị đánh cắp
-      if (isRecordNotFoundError(error)) {
-        throw new UnauthorizedException('Refresh token has been revoked')
-      }
+      console.error('[AuthService:RefreshToken]', error)
       throw error
     }
   }
@@ -244,6 +305,49 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token đã đc sử dụng')
       }
       throw new UnauthorizedException()
+    }
+  }
+
+  async forgotPassword(body: ForgotPasswordType) {
+    try {
+      // kiểm tra email có tồn tại không
+      const existedEmail = await this.authRespository.findUniqueUserIncludeRole({ email: body.email })
+
+      if (!existedEmail) {
+        throw new UnauthorizedException('Email không tồn tại')
+      }
+
+      //  tạo code
+      await this.validateVerificationCode({
+        email: body.email,
+        code: body.code,
+        type: TypeofVerificationCode.FORGOT_PASSWORD,
+      })
+
+      // hash password
+      const hashedPassword = await this.hashingService.hash(body.newPassword)
+
+      // update password
+      await this.authRespository.updateUser(
+        {
+          id: existedEmail.id,
+        },
+        { password: hashedPassword },
+      )
+
+      // xóa Verification code sau khi đổi pass phòng ngừa có người dùng chính pass đó trong thời gian còn lại để đổi nữa
+      await this.authRespository.deleleVerificationCode({
+        email: body.email,
+        code: body.code,
+        type: TypeofVerificationCode.FORGOT_PASSWORD,
+      })
+
+      return {
+        message: 'Thay đổi password thành công',
+      }
+    } catch (error) {
+      console.error('[AuthService:ForgotPassword]', error)
+      throw error
     }
   }
 }

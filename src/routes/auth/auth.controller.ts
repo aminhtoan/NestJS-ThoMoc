@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Res } from '@nestjs/common'
 import {
+  ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
   LoginBodyDTO,
   LoginResDTO,
@@ -18,6 +19,7 @@ import { GoogleService } from './google.service'
 import { Throttle } from '@nestjs/throttler'
 import envConfig from 'src/shared/config'
 import type { Response } from 'express'
+import { IsPublic } from 'src/shared/decorators/is-public.decorator'
 
 @Controller('auth')
 export class AuthController {
@@ -26,17 +28,21 @@ export class AuthController {
     private readonly googleService: GoogleService,
   ) {}
 
+  @IsPublic()
   @Post('register')
   @ZodSerializerDto(RegisterResDTO)
   register(@Body() body: RegisterBodyDTO) {
     return this.authService.register(body)
   }
 
+  @IsPublic()
   @Post('otp')
+  @ZodSerializerDto(MessageResDto)
   sendOTP(@Body() body: SendOTPBodyDTO) {
     return this.authService.sendOTP(body)
   }
 
+  @IsPublic()
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ZodSerializerDto(LoginResDTO)
@@ -44,6 +50,7 @@ export class AuthController {
     return this.authService.login({ ...body, ip, userAgent })
   }
 
+  @IsPublic()
   @Post('refresh-token')
   @ZodSerializerDto(RefreshTokenResDTO)
   @HttpCode(HttpStatus.OK)
@@ -61,6 +68,7 @@ export class AuthController {
     return this.authService.logout(body.refreshToken)
   }
 
+  @IsPublic()
   @Get('google-link')
   @ZodSerializerDto(GetAuthorizationUrlResDTO)
   getGoogleLink(@Ip() ip: string, @UserAgent() userAgent: string) {
@@ -70,6 +78,7 @@ export class AuthController {
     })
   }
 
+  @IsPublic()
   @Get('google/callback')
   async GoogleCallBack(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
     try {
@@ -84,5 +93,12 @@ export class AuthController {
           : 'Đã xảy ra lỗi khi đăng nhập bằng Google, vui lòng thử lại bằng cách khác'
       return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorsMessage=${message}`)
     }
+  }
+
+  @Post('/forgot-password')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDto)
+  forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
+    return this.authService.forgotPassword(body)
   }
 }

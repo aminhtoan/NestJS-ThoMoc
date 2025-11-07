@@ -21,11 +21,11 @@ export const UserStatus = {
   BLOCKED: 'BLOCKED',
 } as const
 
-export const TypeofVerificationCodeType = {
+export const TypeofVerificationCode = {
   REGISTER: 'REGISTER',
   FORGOT_PASSWORD: 'FORGOT_PASSWORD',
   LOGIN: 'LOGIN',
   DISABLE_2FA: 'DISABLE_2FA',
 } as const
 
-export type TypeofVerificationCode = (typeof TypeofVerificationCodeType)[keyof typeof TypeofVerificationCodeType]
+export type TypeofVerificationCodeType = (typeof TypeofVerificationCode)[keyof typeof TypeofVerificationCode]

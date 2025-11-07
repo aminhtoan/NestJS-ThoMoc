@@ -1,5 +1,5 @@
-import { TypeofVerificationCodeType, UserStatus } from 'src/shared/constants/auth.constant'
-import { z } from 'zod'
+import { TypeofVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
+import { email, z } from 'zod'
 
 const UserSchema = z.object({
   id: z.number(),
@@ -53,7 +53,7 @@ export const VerificationCode = z.object({
   id: z.number(),
   email: z.string(),
   code: z.string(),
-  type: z.enum(TypeofVerificationCodeType),
+  type: z.enum(TypeofVerificationCode),
   expiresAt: z.coerce.date(),
   createdAt: z.coerce.date(),
 })
@@ -128,6 +128,25 @@ export const GetAuthorizationUrlResSchema = z.object({
   url: z.string().url(),
 })
 
+// forgot password
+export const ForgotPasswordSchema = z
+  .object({
+    email: z.string().email(),
+    code: z.string().length(6),
+    newPassword: z.string().min(6).max(50),
+    confirmNewPassword: z.string().min(6).max(50),
+  })
+  .strict()
+  .superRefine(({ confirmNewPassword, newPassword }, ctx) => {
+    if (newPassword !== confirmNewPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Mật khẩu và mật khẩu xác nhận không khớp',
+        path: ['confirmNewPassword'],
+      })
+    }
+  })
+
 export type RoleType = z.infer<typeof RoleSchema>
 export type UserType = z.infer<typeof UserSchema>
 export type ResgisterBodyType = z.infer<typeof ResgisterBodySchema>
@@ -143,3 +162,4 @@ export type RefreshTokenType = z.infer<typeof RefreshTokenSchema>
 export type LogoutBodyType = RefreshTokenBodyType
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
+export type ForgotPasswordType = z.infer<typeof ForgotPasswordSchema>

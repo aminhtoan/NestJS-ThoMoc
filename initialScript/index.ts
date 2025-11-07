@@ -1,10 +1,10 @@
 import envConfig from 'src/shared/config'
 import { RoleName } from 'src/shared/constants/role.constant'
-import { HashinngService } from 'src/shared/services/hashinng.service'
+import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 const prisma = new PrismaService()
-const hashinngService = new HashinngService()
+const hashinngService = new HashingService()
 const main = async () => {
   const rolecount = await prisma.role.count()
 

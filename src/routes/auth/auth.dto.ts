@@ -11,6 +11,7 @@ import {
   LogoutBodySchema,
   GoogleAuthStateSchema,
   GetAuthorizationUrlResSchema,
+  ForgotPasswordSchema,
 } from './auth.model'
 import { createZodDto } from 'nestjs-zod'
 
@@ -35,3 +36,5 @@ export class LogoutBodyDTO extends createZodDto(LogoutBodySchema) {}
 export class GoogleAuthStateDTO extends createZodDto(GoogleAuthStateSchema) {}
 
 export class GetAuthorizationUrlResDTO extends createZodDto(GetAuthorizationUrlResSchema) {}
+
+export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordSchema) {}

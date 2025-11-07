@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 const saltRounds = 10
 
 @Injectable()
-export class HashinngService {
+export class HashingService {
   // hashPassword  (password: string): string {
   //     const salt = bcrypt.genSaltSync(saltRounds);
   //     const hash = bcrypt.hashSync(password, salt);

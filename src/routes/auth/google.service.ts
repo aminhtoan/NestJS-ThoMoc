@@ -3,17 +3,17 @@ import { Injectable } from '@nestjs/common'
 import envConfig from 'src/shared/config'
 import { GoogleAuthStateType } from './auth.model'
 import { AuthRespository } from './auth.repo'
-import { HashinngService } from 'src/shared/services/hashinng.service'
 import { RolesService } from './roles.service'
 import { v4 as uuidv4 } from 'uuid'
 import { AuthService } from './auth.service'
+import { HashingService } from 'src/shared/services/hashing.service'
 
 @Injectable()
 export class GoogleService {
   private oauth2Client
   constructor(
     private readonly authRespository: AuthRespository,
-    private readonly hashinngService: HashinngService,
+    private readonly hashingService: HashingService,
     private readonly rolesService: RolesService,
     private readonly authService: AuthService,
   ) {
@@ -78,7 +78,7 @@ export class GoogleService {
       if (!user) {
         const clientRoleId = await this.rolesService.getClientRoleId()
         const randomPassword = uuidv4()
-        const hashPass = await this.hashinngService.hash(randomPassword)
+        const hashPass = await this.hashingService.hash(randomPassword)
 
         user = await this.authRespository.createUserWithGoogle({
           email: data.email,

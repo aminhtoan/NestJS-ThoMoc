@@ -1,8 +1,9 @@
-import { TypeofVerificationCode } from './../../shared/constants/auth.constant'
+import { TypeofVerificationCode, TypeofVerificationCodeType } from './../../shared/constants/auth.constant'
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   DeiviceType,
+  ForgotPasswordType,
   RefreshTokenType,
   ResgisterBodyType,
   RoleType,
@@ -48,12 +49,13 @@ export class AuthRespository {
       update: {
         code: payload.code,
         expiresAt: payload.expiresAt,
+        type: payload.type,
       },
     })
   }
 
   async findUniqueVerificationCode(
-    uniqueValue: { email: string } | { id: number } | { email: string; code: string; type: TypeofVerificationCode },
+    uniqueValue: { email: string } | { id: number } | { email: string; code: string; type: TypeofVerificationCodeType },
   ): Promise<VerificationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue,
@@ -110,6 +112,24 @@ export class AuthRespository {
   async deleteRefreshToken(uniqueObject: { token: string }): Promise<RefreshTokenType> {
     return this.prismaService.refreshToken.delete({
       where: uniqueObject,
+    })
+  }
+
+  async updateUser(
+    uniqueObject: { id: number } | { email: string },
+    data: Partial<Omit<UserType, 'id'>>,
+  ): Promise<UserType> {
+    return this.prismaService.user.update({
+      where: uniqueObject,
+      data,
+    })
+  }
+
+  async deleleVerificationCode(
+    uniqueValue: { email: string } | { id: number } | { email: string; code: string; type: TypeofVerificationCodeType },
+  ) {
+    return this.prismaService.verificationCode.delete({
+      where: uniqueValue,
     })
   }
 }
