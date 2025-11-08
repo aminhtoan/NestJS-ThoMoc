@@ -132,4 +132,20 @@ export class AuthRespository {
       where: uniqueValue,
     })
   }
+
+  async findDeviceById(deviceId: number) {
+    return this.prismaService.device.findFirstOrThrow({
+      where: {
+        id: deviceId,
+      },
+    })
+  }
+
+  async revokeAllRefreshTokens(userId: number) {
+    return this.prismaService.device.deleteMany({
+      where: {
+        userId,
+      },
+    })
+  }
 }

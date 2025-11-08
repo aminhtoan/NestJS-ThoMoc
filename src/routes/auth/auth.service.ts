@@ -250,6 +250,14 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token dẫ bị thu hồi')
       }
 
+      const device = await this.authRespository.findDeviceById(ref.deviceId)
+
+      if (device.ip !== ip || device.userAgent !== userAgent) {
+        // nếu khác IP hoặc UA, nghi ngờ bị đánh cắp
+        // có lẽ phải là gửi email khi có người đnagw nhập đến nếu không cùng địa chỉ ip
+        await this.authRespository.revokeAllRefreshTokens(ref.userId)
+        throw new UnauthorizedException('Phát hiện thiết bị lạ, vui lòng đăng nhập lại')
+      }
       // lấy thông tin deviceId , roleId, rolName
       const {
         deviceId,
