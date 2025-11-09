@@ -13,6 +13,7 @@ import { ForgotPasswordType, ResgisterBodyType, SendOTPBodyType } from './auth.m
 import { AuthRespository } from './auth.repo'
 import { RolesService } from './roles.service'
 import { HashingService } from 'src/shared/services/hashing.service'
+import { TwoFactorAuthService } from './2fa.service'
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly sendEmail: SendEmail,
     private readonly tokenService: TokenService,
+    private readonly twoFactorAuthService: TwoFactorAuthService,
   ) {}
 
   async validateVerificationCode({
@@ -265,7 +267,10 @@ export class AuthService {
       // lấy thông tin deviceId , roleId, rolName
       const {
         deviceId,
-        user: { roleId, name: roleName },
+        user: {
+          roleId,
+          role: { name: roleName },
+        },
       } = ref
 
       // update device
@@ -361,6 +366,34 @@ export class AuthService {
       }
     } catch (error) {
       console.error('[AuthService:ForgotPassword]', error)
+      throw error
+    }
+  }
+
+  async setUpTwoFactorAuth(userId: number) {
+    console.log('check ', userId)
+    try {
+      // láy thông tin user, kiểm tra xem user có tồn tại không, có bật 2fa chưa
+      const user = await this.authRespository.findUniqueUserIncludeRole({ id: userId })
+
+      if (!user) {
+        throw new UnauthorizedException('Email không tồn tại')
+      }
+
+      if (user.totpSecret) {
+        throw new UnauthorizedException('TotpSecret đã tồn tại')
+      }
+
+      // tạo ra secret và uri
+      const { totp, uri } = await this.twoFactorAuthService.generateTOTPSecret(user.email)
+
+      // câp nhật secret vào user trong db
+      await this.authRespository.updateUser({ id: user.id }, { totpSecret: totp })
+
+      // trả về secret và uri
+      return { secret: totp, uri }
+    } catch (error) {
+      console.error('[AuthService:SetUpTwoFactorAuth]', error)
       throw error
     }
   }

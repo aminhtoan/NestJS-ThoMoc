@@ -9,19 +9,20 @@ import { HttpExceptionFilter } from './shared/filters/http-exception.filter'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { MyThrottlerGuard } from './shared/guards/custom-throttler.guard'
+import { AuthenticationGuard } from './shared/guards/authentication.guard'
 
 @Module({
   imports: [
     SharedModule,
     AuthModule,
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 1000 * 60,
-          limit: 10,
-        },
-      ],
-    }),
+    // ThrottlerModule.forRoot({
+    //   throttlers: [
+    //     {
+    //       ttl: 1000 * 60,
+    //       limit: 10,
+    //     },
+    //   ],
+    // }),
   ],
   controllers: [AppController],
   providers: [
@@ -40,7 +41,7 @@ import { MyThrottlerGuard } from './shared/guards/custom-throttler.guard'
     },
     {
       provide: APP_GUARD,
-      useClass: MyThrottlerGuard,
+      useClass: AuthenticationGuard,
     },
   ],
 })

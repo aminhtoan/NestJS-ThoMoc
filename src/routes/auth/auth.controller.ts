@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Res } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Res, UseGuards } from '@nestjs/common'
 import {
   ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
@@ -10,6 +10,7 @@ import {
   RegisterBodyDTO,
   RegisterResDTO,
   SendOTPBodyDTO,
+  TwoFactorSetupResDTO,
 } from './auth.dto'
 import { AuthService } from './auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -19,7 +20,10 @@ import { GoogleService } from './google.service'
 import { Throttle } from '@nestjs/throttler'
 import envConfig from 'src/shared/config'
 import type { Response } from 'express'
-import { IsPublic } from 'src/shared/decorators/is-public.decorator'
+import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
+import { TwoFactorAuthService } from './2fa.service'
+import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
 
 @Controller('auth')
 export class AuthController {
@@ -28,6 +32,7 @@ export class AuthController {
     private readonly googleService: GoogleService,
   ) {}
 
+  // is public là chọn type là none còn ko thì là bear có cung cấp accesstoke của file này AuthenticationGuard
   @IsPublic()
   @Post('register')
   @ZodSerializerDto(RegisterResDTO)
@@ -95,10 +100,10 @@ export class AuthController {
     }
   }
 
-  @Post('/forgot-password')
-  @IsPublic()
-  @ZodSerializerDto(MessageResDto)
-  forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
-    return this.authService.forgotPassword(body)
+  @Post('/2fa/setup')
+  @ZodSerializerDto(TwoFactorSetupResDTO)
+  setUpTwoFactorAuth(@Body() _: EmptyBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.authService.setUpTwoFactorAuth(userId)
   }
+
 }

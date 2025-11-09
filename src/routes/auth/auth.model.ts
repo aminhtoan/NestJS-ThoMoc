@@ -158,13 +158,13 @@ export const DisableTwoFactorBodySchema = z
     code: z.string().length(6).optional(),
   })
   .refine((data) => data.code || data.totpCode, {
-    message: 'Phải nhập mã xác nhận',
+    message: 'Phải nhập mã xác thực 2FA hoặc mã OTP',
     path: ['totpCode', 'code'],
   })
 
 export const TwoFactorSetupResSchema = z.object({
-  secret: z.string().length(6).optional(),
-  url: z.string().length(6).optional(),
+  secret: z.string().optional(),
+  uri: z.string().optional(),
 })
 
 export type RoleType = z.infer<typeof RoleSchema>
