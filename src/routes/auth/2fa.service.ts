@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common'
+import { ConflictException, Inject, Injectable, UnprocessableEntityException } from '@nestjs/common'
 import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
 import * as OTPAuth from 'otpauth'
 import envConfig from 'src/shared/config'
-import { generateOTP } from 'src/shared/helpers'
+import { REDIS_CLIENT } from 'src/shared/services/redis.service'
+import type { RedisClientType } from 'redis'
 
 @Injectable()
 export class TwoFactorAuthService {
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClientType) {}
   private createTOTP(email: string, secret?: string) {
     return new OTPAuth.TOTP({
       issuer: envConfig.APP_NAME,
@@ -28,16 +30,21 @@ export class TwoFactorAuthService {
 
   async verifyTOTP({ email, secret, token }: { email: string; secret: string; token: string }): Promise<boolean> {
     const totp = this.createTOTP(email, secret)
-    let delta = totp.validate({ token, window: 1 }) // cho phép lệch thơi gian, khấu hao
+
+    const used = await this.redis.get(`2fa:used:${email}:${token}`)
+
+    if (used) {
+      throw new ConflictException([
+        {
+          message: 'Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới.',
+          path: 'totpCode',
+        },
+      ])
+    }
+
+    let delta = totp.validate({ token, window: 1 })
+    await this.redis.set(`2fa:used:${email}:${token}`, '1', { EX: 30 })
+
     return delta !== null
   }
 }
-
-// const t = new TwoFactorAuthService()
-// console.log(
-//   t.verifyTOTP({
-//     email: 'minhtoanpham1412@gmail.com',
-//     secret: 'WBXSDTGD2KHMLWVYZPJCMN7D3BWMIS46',
-//     token: '038458',
-//   }),
-// )

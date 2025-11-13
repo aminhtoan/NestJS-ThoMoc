@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { Inject, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 import { addMilliseconds } from 'date-fns'
 import ms, { type StringValue } from 'ms'
 import envConfig from 'src/shared/config'
@@ -188,6 +188,14 @@ export class AuthService {
       throw new UnauthorizedException('Email không tồn tại')
     }
 
+    if (!user.totpSecret) {
+      throw new UnprocessableEntityException([
+        {
+          message: 'Xác thực 2FA ko đc bật',
+          path: 'totpSecret',
+        },
+      ])
+    }
     const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
 
     if (!isPasswordMatch) {
@@ -201,39 +209,45 @@ export class AuthService {
 
     // Nếu user đã bật mã 2fa thì kiểm tra mã  2fa totp hoặc otp code email
 
-    if (user.totpSecret) {
-      const token = body.totpCode || body.code
+    const token = body.totpCode || body.code
 
-      if (!token) {
+    if (!token) {
+      throw new UnprocessableEntityException([
+        {
+          message: 'Thiếu TOTP Secret hoặc OTP code',
+          path: 'code, totpCode',
+        },
+      ])
+    }
+
+    if (body.totpCode) {
+      const TOTPIsvaild = await this.twoFactorAuthService.verifyTOTP({
+        email: user.email,
+        secret: user.totpSecret,
+        token: body.totpCode,
+      })
+      if (!TOTPIsvaild) {
         throw new UnprocessableEntityException([
           {
-            message: 'Thiếu TOTP Secret hoặc OTP code',
-            path: 'code, totpCode',
+            message: '2FA không hợp lệ',
+            path: 'totpCode',
           },
         ])
       }
+    } else if (body.code) {
+      const isValid = await this.validateVerificationCode({
+        email: user.email,
+        code: body.code,
+        type: TypeofVerificationCode.LOGIN,
+      })
 
-      if (body.totpCode) {
-        await this.twoFactorAuthService.verifyTOTP({
-          email: user.email,
-          secret: user.totpSecret,
-          token: body.totpCode,
-        })
-      } else if (body.code) {
-        const isValid = await this.validateVerificationCode({
-          email: user.email,
-          code: body.code,
-          type: TypeofVerificationCode.LOGIN,
-        })
-
-        if (!isValid) {
-          throw new UnprocessableEntityException([
-            {
-              message: 'Mã OTP không hợp lệ hoặc đã hết hạn',
-              path: 'totpCode',
-            },
-          ])
-        }
+      if (!isValid) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã OTP không hợp lệ hoặc đã hết hạn',
+            path: 'totpCode',
+          },
+        ])
       }
     }
 
@@ -441,7 +455,6 @@ export class AuthService {
   }
   async disableTwoFactorAuth(body: DisableTwoFactorBodyType, userId: number) {
     try {
-      
       // 1. kiểm tra bằng id bằng accesstoken xem coi có tồn tại không, kiểm tra password, totpsecret có tồn tại không
       const user = await this.authRespository.findUniqueUserIncludeRole({ id: userId })
 

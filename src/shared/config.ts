@@ -31,6 +31,10 @@ const configSchema = z.object({
   GOOGLE_CLIENT_REDIRECT_URI: z.string(),
   SERCET_2FA: z.string(),
   APP_NAME: z.string(),
+  REDIS_HOST: z.string(),
+  REDIS_PORT: z.coerce.number(),
+  REDIS_USERNAME: z.string(),
+  REDIS_PASSWORD: z.string(),
 })
 
 const configServer = configSchema.safeParse(process.env)

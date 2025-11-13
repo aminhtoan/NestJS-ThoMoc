@@ -1,4 +1,18 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Ip, Post, Query, Res, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Ip,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
 import {
   DisableTwoFactorBodyDTO,
   ForgotPasswordBodyDTO,
@@ -22,15 +36,17 @@ import { Throttle } from '@nestjs/throttler'
 import envConfig from 'src/shared/config'
 import type { Response } from 'express'
 import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
-import { TwoFactorAuthService } from './2fa.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import type { RedisClientType } from 'redis'
+import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
   ) {}
 
   // is public là chọn type là none còn ko thì là bear có cung cấp accesstoke của file này AuthenticationGuard
