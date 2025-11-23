@@ -15,11 +15,14 @@ import {
   LoginBodyType,
   ResgisterBodyType,
   SendOTPBodyType,
+  VerifyLoginBodyType,
 } from './auth.model'
 import { AuthRespository } from './auth.repo'
 import { RolesService } from './roles.service'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { TwoFactorAuthService } from './2fa.service'
+import { REDIS_CLIENT } from 'src/shared/services/redis.service'
+import type { RedisClientType } from 'redis'
 
 @Injectable()
 export class AuthService {
@@ -31,6 +34,7 @@ export class AuthService {
     private readonly sendEmail: SendEmail,
     private readonly tokenService: TokenService,
     private readonly twoFactorAuthService: TwoFactorAuthService,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
   ) {}
 
   async validateVerificationCode({
@@ -178,27 +182,16 @@ export class AuthService {
     }
   }
 
-  async login(body: LoginBodyType & { ip: string; userAgent: string }) {
-    // kiểm tra email có tồn tại, check password có đúng không
-    const user = await this.authRespository.findUniqueUserIncludeRole({
-      email: body.email,
-    })
+  async loginCheck(body: VerifyLoginBodyType) {
+    const { email, password } = body
 
-    if (!user) {
-      throw new UnauthorizedException('Email không tồn tại')
-    }
+    // 1. Kiểm tra user có tồn tại không
+    const user = await this.authRespository.findUniqueUserIncludeRole({ email })
+    if (!user) throw new Error('Email hoặc mật khẩu không đúng')
 
-    if (!user.totpSecret) {
-      throw new UnprocessableEntityException([
-        {
-          message: 'Xác thực 2FA ko đc bật',
-          path: 'totpSecret',
-        },
-      ])
-    }
-    const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
-
-    if (!isPasswordMatch) {
+    // 2. Check password
+    const isMatch = await this.hashingService.compare(password, user.password)
+    if (!isMatch) {
       throw new UnprocessableEntityException([
         {
           field: 'password',
@@ -207,34 +200,97 @@ export class AuthService {
       ])
     }
 
-    // Nếu user đã bật mã 2fa thì kiểm tra mã  2fa totp hoặc otp code email
+    const tempToken = crypto.randomUUID()
 
-    const token = body.totpCode || body.code
+    await this.redis.set(`login-temp:${tempToken}`, JSON.stringify({ userId: user.id }), {
+      EX: 300,
+    })
 
-    if (!token) {
+    return {
+      needOTP: !user.totpSecret,
+      needTOTP: !!user.totpSecret,
+      tempToken,
+    }
+  }
+
+  async login(body: LoginBodyType & { ip: string; userAgent: string }) {
+    const temp = await this.redis.get(`login-temp:${body.tempToken}`)
+    if (!temp) {
       throw new UnprocessableEntityException([
         {
-          message: 'Thiếu TOTP Secret hoặc OTP code',
-          path: 'code, totpCode',
+          message: 'Phiên đăng nhập hết hạn hoặc không hợp lệ',
+          path: 'tempToken',
         },
       ])
     }
+    const checkuser = JSON.parse(temp)
 
-    if (body.totpCode) {
-      const TOTPIsvaild = await this.twoFactorAuthService.verifyTOTP({
-        email: user.email,
-        secret: user.totpSecret,
-        token: body.totpCode,
-      })
-      if (!TOTPIsvaild) {
+    // kiểm tra email có tồn tại, check password có đúng không
+    const user = await this.authRespository.findUniqueUserIncludeRole({
+      id: checkuser.userId,
+    })
+
+    if (!user) {
+      throw new UnauthorizedException('Email không tồn tại')
+    }
+
+    // FORM 1: User có 2FA → chỉ chấp nhận TOTP
+    if (user.totpSecret) {
+      if (!body.totpCode) {
         throw new UnprocessableEntityException([
           {
-            message: '2FA không hợp lệ',
+            message: 'Tài khoản có bật 2FA, vui lòng nhập mã từ ứng dụng xác thực',
             path: 'totpCode',
           },
         ])
       }
-    } else if (body.code) {
+
+      // Xóa field code nếu có (tránh dùng cả hai)
+      if (body.code) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Tài khoản 2FA chỉ sử dụng mã từ ứng dụng xác thực',
+            path: 'code',
+          },
+        ])
+      }
+
+      const TOTPIsValid = await this.twoFactorAuthService.verifyTOTP({
+        email: user.email,
+        secret: user.totpSecret,
+        token: body.totpCode,
+      })
+
+      if (!TOTPIsValid) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã 2FA không hợp lệ',
+            path: 'totpCode',
+          },
+        ])
+      }
+    }
+    // FORM 2: User không có 2FA → chỉ chấp nhận OTP email
+    else {
+      if (!body.code) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Vui lòng nhập mã OTP từ email',
+            path: 'code',
+          },
+        ])
+      }
+
+      // Xóa field totpCode nếu có (tránh dùng cả hai)
+      if (body.totpCode) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Tài khoản chưa bật 2FA, vui lòng sử dụng mã OTP từ email',
+            path: 'totpCode',
+          },
+        ])
+      }
+
       const isValid = await this.validateVerificationCode({
         email: user.email,
         code: body.code,
@@ -245,11 +301,12 @@ export class AuthService {
         throw new UnprocessableEntityException([
           {
             message: 'Mã OTP không hợp lệ hoặc đã hết hạn',
-            path: 'totpCode',
+            path: 'code',
           },
         ])
       }
     }
+    await this.redis.del(`login-temp:${body.tempToken}`)
 
     // lưu userId, địa chỉ ip, userAgent là kiểu mo tả thiết bị của bạn đang sử dụng phần mềm nào ....
     const device = await this.authRespository.createDevice({

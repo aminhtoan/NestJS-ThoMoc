@@ -64,10 +64,16 @@ export const SendOTPBodySchema = VerificationCode.pick({
 }).strict()
 
 // Login
-export const LoginBodySchema = UserSchema.pick({
+
+export const VerifyLoginBodySchema = UserSchema.pick({
   email: true,
   password: true,
-})
+}).strict()
+
+export const LoginBodySchema = z
+  .object({
+    tempToken: z.string(),
+  })
   .extend({
     totpCode: z.string().length(6).optional(),
     code: z.string().length(6).optional(),
@@ -210,3 +216,4 @@ export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSc
 export type ForgotPasswordType = z.infer<typeof ForgotPasswordSchema>
 export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
 export type TwoFactorSetupResType = z.infer<typeof TwoFactorSetupResSchema>
+export type VerifyLoginBodyType = z.infer<typeof VerifyLoginBodySchema>
