@@ -12,6 +12,7 @@ import {
   ForgotPasswordSchema,
   TwoFactorSetupResSchema,
   DisableTwoFactorBodySchema,
+  VerifyLoginBodySchema,
 } from './auth.model'
 import { createZodDto } from 'nestjs-zod'
 
@@ -42,3 +43,5 @@ export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordSchema) {}
 export class TwoFactorSetupResDTO extends createZodDto(TwoFactorSetupResSchema) {}
 
 export class DisableTwoFactorBodyDTO extends createZodDto(DisableTwoFactorBodySchema) {}
+
+export class VerifyLoginBodyDTO extends createZodDto(VerifyLoginBodySchema) {}

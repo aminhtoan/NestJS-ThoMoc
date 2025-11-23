@@ -26,6 +26,7 @@ import {
   RegisterResDTO,
   SendOTPBodyDTO,
   TwoFactorSetupResDTO,
+  VerifyLoginBodyDTO,
 } from './auth.dto'
 import { AuthService } from './auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -62,6 +63,13 @@ export class AuthController {
   @ZodSerializerDto(MessageResDto)
   sendOTP(@Body() body: SendOTPBodyDTO) {
     return this.authService.sendOTP(body)
+  }
+
+  @IsPublic()
+  @Post('login/verify')
+  @Throttle({ default: { limit: 5, ttl: 6000 } })
+  loginCheck(@Body() body: VerifyLoginBodyDTO) {
+    return this.authService.loginCheck(body)
   }
 
   @IsPublic()
