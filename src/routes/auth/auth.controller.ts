@@ -9,6 +9,7 @@ import {
   Ip,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -27,20 +28,22 @@ import {
   SendOTPBodyDTO,
   TwoFactorSetupResDTO,
   VerifyLoginBodyDTO,
-} from './auth.dto'
-import { AuthService } from './auth.service'
+} from './dto/auth.dto'
+import { AuthService } from './services/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 import { MessageResDto } from 'src/shared/dtos/response.dto'
-import { GoogleService } from './google.service'
+import { GoogleService } from './services/google.service'
 import { Throttle } from '@nestjs/throttler'
 import envConfig from 'src/shared/config'
-import type { Response } from 'express'
+import type { Request, Response } from 'express'
 import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import type { RedisClientType } from 'redis'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'
+import { AuthGuard } from '@nestjs/passport'
+import { FacebookService } from './services/facebook.service'
 
 @Controller('auth')
 export class AuthController {
@@ -48,6 +51,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly googleService: GoogleService,
     @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
+    private readonly facebookService: FacebookService,
   ) {}
 
   // is public là chọn type là none còn ko thì là bear có cung cấp accesstoke của file này AuthenticationGuard
@@ -142,5 +146,25 @@ export class AuthController {
   @ZodSerializerDto(MessageResDto)
   forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
     return this.authService.forgotPassword(body)
+  }
+
+  @IsPublic()
+  @Get('facebook')
+  async getFacebookLink(@Ip() ip: string, @UserAgent() userAgent: string) {
+    return this.facebookService.getFacebookLink({ ip, userAgent })
+  }
+
+  @IsPublic()
+  @Get('facebook/callback')
+  async FacebookCallback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    try {
+      const data = await this.facebookService.FacebookCallback({ code, state })
+      return res.redirect(
+        `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Đăng nhập Facebook thất bại, vui lòng thử lại'
+      return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorsMessage=${message}`)
+    }
   }
 }

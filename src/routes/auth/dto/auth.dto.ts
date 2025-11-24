@@ -13,7 +13,7 @@ import {
   TwoFactorSetupResSchema,
   DisableTwoFactorBodySchema,
   VerifyLoginBodySchema,
-} from './auth.model'
+} from '../models/auth.model'
 import { createZodDto } from 'nestjs-zod'
 
 // cái này là body ý nghĩa là cái phần mày user sẽ nhập vào, có số luọng cụ thể

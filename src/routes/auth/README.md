@@ -12,3 +12,6 @@ POST   /api/auth/resend-verification # Gửi lại email verification
 
 GET    /api/auth/facebook-link
 GET    /api/auth/facebook/callback tôi sẽ làm thêm mấy cái này
+
+
+folder file trong đó sẽ tách ra thành nhiều file.

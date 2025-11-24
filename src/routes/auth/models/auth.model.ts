@@ -7,7 +7,7 @@ const UserSchema = z.object({
   name: z
     .string()
     .min(3)
-    .regex(/^[a-zA-Z0-9]+$/),
+    .regex(/^[a-zA-Z0-9 ]+$/, 'Tên chỉ bao gồm chữ cái, số, và khoảng trắng'),
   phoneNumber: z.string().min(10).max(15),
   password: z.string().min(6).max(50),
   avatar: z.string().nullable(),

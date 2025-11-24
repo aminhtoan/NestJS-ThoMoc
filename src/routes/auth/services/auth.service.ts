@@ -7,8 +7,8 @@ import { generateOTP, isRecordNotFoundError, isUniqueConstraintError } from 'src
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { SendEmail } from 'src/shared/services/email.service'
 import { AccessTokenPayLoadCreate } from 'src/shared/types/jwt.type'
-import { TokenService } from './../../shared/services/token.service'
-import { LoginBodyDTO, RefreshTokenBodyDTO } from './auth.dto'
+import { TokenService } from '../../../shared/services/token.service'
+import { LoginBodyDTO, RefreshTokenBodyDTO } from '../dto/auth.dto'
 import {
   DisableTwoFactorBodyType,
   ForgotPasswordType,
@@ -16,11 +16,11 @@ import {
   ResgisterBodyType,
   SendOTPBodyType,
   VerifyLoginBodyType,
-} from './auth.model'
-import { AuthRespository } from './auth.repo'
+} from '../models/auth.model'
+import { AuthRespository } from '../repository/auth.repo'
 import { RolesService } from './roles.service'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { TwoFactorAuthService } from './2fa.service'
+import { TwoFactorAuthService } from './two-factor.service'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import type { RedisClientType } from 'redis'
 
