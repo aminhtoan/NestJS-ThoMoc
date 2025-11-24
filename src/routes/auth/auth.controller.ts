@@ -160,11 +160,11 @@ export class AuthController {
     try {
       const data = await this.facebookService.FacebookCallback({ code, state })
       return res.redirect(
-        `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
+        `${envConfig.FACEBOOK_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
       )
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Đăng nhập Facebook thất bại, vui lòng thử lại'
-      return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorsMessage=${message}`)
+      return res.redirect(`${envConfig.FACEBOOK_CLIENT_REDIRECT_URI}?errorsMessage=${message}`)
     }
   }
 }

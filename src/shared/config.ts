@@ -38,6 +38,8 @@ const configSchema = z.object({
   FACEBOOK_APP_ID: z.string(),
   FACEBOOK_APP_SECRET: z.string(),
   FACEBOOK_CALLBACK_URL: z.string(),
+  APP_URL: z.string(),
+  FACEBOOK_CLIENT_REDIRECT_URI: z.string(),
 })
 
 const configServer = configSchema.safeParse(process.env)

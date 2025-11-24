@@ -10,8 +10,7 @@ POST   /api/auth/verify-email       # Verify email address
 POST   /api/auth/resend-verification # Gửi lại email verification
 
 
-GET    /api/auth/facebook-link
-GET    /api/auth/facebook/callback tôi sẽ làm thêm mấy cái này
+GET    /api/auth/facebook-link xong
+GET    /api/auth/facebook/callback  xong
 
-
-folder file trong đó sẽ tách ra thành nhiều file.
+model folder file trong đó sẽ tách ra thành nhiều file.
