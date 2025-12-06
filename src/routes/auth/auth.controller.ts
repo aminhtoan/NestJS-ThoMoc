@@ -25,9 +25,11 @@ import {
   RefreshTokenResDTO,
   RegisterBodyDTO,
   RegisterResDTO,
+  ResetPasswordBodyDTO,
   SendOTPBodyDTO,
   TwoFactorSetupResDTO,
   VerifyLoginBodyDTO,
+  VerifyResetCodeBodyDTO,
 } from './dto/auth.dto'
 import { AuthService } from './services/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -70,15 +72,15 @@ export class AuthController {
   }
 
   @IsPublic()
-  @Post('login/verify')
-  @Throttle({ default: { limit: 5, ttl: 6000 } })
+  @Post('login')
+  // @Throttle({ default: { limit: 5, ttl: 6000 } })
   loginCheck(@Body() body: VerifyLoginBodyDTO) {
     return this.authService.loginCheck(body)
   }
 
   @IsPublic()
-  @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 6000 } })
+  @Post('login/verify')
+  // @Throttle({ default: { limit: 5, ttl: 6000 } })
   @ZodSerializerDto(LoginResDTO)
   login(@Body() body: LoginBodyDTO, @Ip() ip: string, @UserAgent() userAgent: string) {
     return this.authService.login({ ...body, ip, userAgent })
@@ -143,9 +145,22 @@ export class AuthController {
 
   @Post('/forgot-password')
   @IsPublic()
-  @ZodSerializerDto(MessageResDto)
   forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
     return this.authService.forgotPassword(body)
+  }
+
+  @Post('verify-reset-code')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDto)
+  verifyResetCode(@Body() body: VerifyResetCodeBodyDTO) {
+    return this.authService.verifyResetCode(body)
+  }
+
+  @Post('/reset-password')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDto)
+  resetPassword(@Body() body: ResetPasswordBodyDTO) {
+    return this.authService.resetPassword(body)
   }
 
   @IsPublic()

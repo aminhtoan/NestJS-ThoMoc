@@ -1,4 +1,10 @@
-import { Inject, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { addMilliseconds } from 'date-fns'
 import ms, { type StringValue } from 'ms'
 import envConfig from 'src/shared/config'
@@ -13,9 +19,11 @@ import {
   DisableTwoFactorBodyType,
   ForgotPasswordType,
   LoginBodyType,
+  ResetPasswordBodyType,
   ResgisterBodyType,
   SendOTPBodyType,
   VerifyLoginBodyType,
+  VerifyResetCodeBodyType,
 } from '../models/auth.model'
 import { AuthRespository } from '../repository/auth.repo'
 import { RolesService } from './roles.service'
@@ -23,6 +31,8 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { TwoFactorAuthService } from './two-factor.service'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import type { RedisClientType } from 'redis'
+import { VerificationCodeType } from '@prisma/client'
+import { TypeTempRedis } from 'src/shared/constants/redis.constant'
 
 @Injectable()
 export class AuthService {
@@ -187,7 +197,14 @@ export class AuthService {
 
     // 1. Kiểm tra user có tồn tại không
     const user = await this.authRespository.findUniqueUserIncludeRole({ email })
-    if (!user) throw new Error('Email hoặc mật khẩu không đúng')
+    if (!user) {
+      throw new UnprocessableEntityException([
+        {
+          field: 'email',
+          error: 'Email bạn chưa từng được đăng ký',
+        },
+      ])
+    }
 
     // 2. Check password
     const isMatch = await this.hashingService.compare(password, user.password)
@@ -195,7 +212,7 @@ export class AuthService {
       throw new UnprocessableEntityException([
         {
           field: 'password',
-          error: 'password is incorrect',
+          error: 'Email hoặc mật khẩu không đúng',
         },
       ])
     }
@@ -249,8 +266,8 @@ export class AuthService {
       if (body.code) {
         throw new UnprocessableEntityException([
           {
-            message: 'Tài khoản 2FA chỉ sử dụng mã từ ứng dụng xác thực',
-            path: 'code',
+            field: 'Tài khoản 2FA chỉ sử dụng mã từ ứng dụng xác thực',
+            error: 'code',
           },
         ])
       }
@@ -448,25 +465,83 @@ export class AuthService {
         throw new UnauthorizedException('Email không tồn tại')
       }
 
-      //  tạo code
-      await this.validateVerificationCode({
+      const userId = existedEmail.id
+
+      //  1. Kiểm tra user đã có phiên chưa
+      const oldTempToken = await this.redis.get(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`)
+
+      if (oldTempToken) {
+        // Kiểm tra session còn tồn tại không
+        const session = await this.redis.get(`${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${oldTempToken}`)
+
+        if (session) {
+          // Vẫn còn phiên → trả về phiên cũ
+          return {
+            data: {
+              name_folder_redis: TypeTempRedis.FORGOT_PASSWORD_TEMP,
+              tempToken: oldTempToken,
+              reused: true,
+            },
+          }
+        }
+      }
+      const tempToken = crypto.randomUUID()
+
+      await this.redis.set(
+        `${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${tempToken}`,
+        JSON.stringify({ userId: existedEmail.id }),
+        {
+          EX: 300,
+        },
+      )
+
+      // lưu session theo userId
+      await this.redis.set(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`, tempToken, { EX: 300 })
+
+      await this.sendOTP({
+        type: VerificationCodeType.FORGOT_PASSWORD,
+        email: existedEmail.email,
+      })
+      return {
+        data: {
+          name_folder_redis: TypeTempRedis.FORGOT_PASSWORD_TEMP,
+          tempToken,
+        },
+      }
+    } catch (error) {
+      console.error('[AuthService:ForgotPassword]', error)
+      throw error
+    }
+  }
+
+  async verifyResetCode(body: VerifyResetCodeBodyType) {
+    try {
+      const temp = await this.redis.get(`${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${body.tempToken}`)
+
+      if (!temp) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Phiên Forgot Password hết hạn hoặc không hợp lệ',
+            path: 'tempToken',
+          },
+        ])
+      }
+
+      const isValid = await this.validateVerificationCode({
         email: body.email,
         code: body.code,
         type: TypeofVerificationCode.FORGOT_PASSWORD,
       })
 
-      // hash password
-      const hashedPassword = await this.hashingService.hash(body.newPassword)
+      if (!isValid) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã OTP không hợp lệ hoặc đã hết hạn',
+            path: 'code',
+          },
+        ])
+      }
 
-      // update password
-      await this.authRespository.updateUser(
-        {
-          id: existedEmail.id,
-        },
-        { password: hashedPassword },
-      )
-
-      // xóa Verification code sau khi đổi pass phòng ngừa có người dùng chính pass đó trong thời gian còn lại để đổi nữa
       await this.authRespository.deleleVerificationCode({
         email_code_type: {
           email: body.email,
@@ -476,10 +551,52 @@ export class AuthService {
       })
 
       return {
-        message: 'Thay đổi password thành công',
+        message: 'Mã đã được xác minh!',
       }
     } catch (error) {
-      console.error('[AuthService:ForgotPassword]', error)
+      console.error('[AuthService:verifyOTPCode]', error)
+      throw error
+    }
+  }
+
+  async resetPassword(body: ResetPasswordBodyType) {
+    try {
+      const { newPassword, confirmNewPassword } = body
+
+      if (confirmNewPassword !== newPassword) {
+        throw new BadRequestException('Mật khẩu xác nhận không khớp')
+      }
+
+      const temp = await this.redis.get(`${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${body.tempToken}`)
+      if (!temp) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Phiên Forgot Password hết hạn hoặc không hợp lệ',
+            path: 'tempToken',
+          },
+        ])
+      }
+
+      const session = JSON.parse(temp)
+      const userId = session.userId
+      // hash password
+      const hashedPassword = await this.hashingService.hash(body.newPassword)
+
+      // update password
+      await this.authRespository.updateUser(
+        {
+          id: userId,
+        },
+        { password: hashedPassword },
+      )
+
+      await this.redis.del(`${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${body.tempToken}`)
+
+      return {
+        message: 'Thay đổi mật khẩu thành công thành công',
+      }
+    } catch (error) {
+      console.error('[AuthService:resetPassword]', error)
       throw error
     }
   }

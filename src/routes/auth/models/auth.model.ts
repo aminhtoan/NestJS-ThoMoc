@@ -1,13 +1,12 @@
+import { truncate } from 'fs'
 import { TypeofVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
+import { REGEX } from 'src/shared/constants/regex.constant'
 import { email, z } from 'zod'
 
 const UserSchema = z.object({
   id: z.number(),
-  email: z.string().email(),
-  name: z
-    .string()
-    .min(3)
-    .regex(/^[a-zA-Z0-9 ]+$/, 'Tên chỉ bao gồm chữ cái, số, và khoảng trắng'),
+  email: z.string().regex(REGEX.email, 'Email không hợp lệ'),
+  name: z.string().min(3).regex(REGEX.name, 'Tên chỉ bao gồm chữ cái, số, và khoảng trắng'),
   phoneNumber: z.string().min(10).max(15),
   password: z.string().min(6).max(50),
   avatar: z.string().nullable(),
@@ -72,7 +71,7 @@ export const VerifyLoginBodySchema = UserSchema.pick({
 
 export const LoginBodySchema = z
   .object({
-    tempToken: z.string(),
+    tempToken: z.string().regex(REGEX.uuid, 'tempToken không hợp lệ'),
   })
   .extend({
     totpCode: z.string().length(6).optional(),
@@ -153,11 +152,32 @@ export const GetAuthorizationUrlResSchema = z.object({
   url: z.string().url(),
 })
 
+// // forgot password
+// export const ForgotPasswordSchema = z
+//   .object({
+//     email: z.string().email(),
+//     code: z.string().length(6),
+//     newPassword: z.string().min(6).max(50),
+//     confirmNewPassword: z.string().min(6).max(50),
+//   })
+
 // forgot password
-export const ForgotPasswordSchema = z
-  .object({
-    email: z.string().email(),
-    code: z.string().length(6),
+export const ForgotPasswordBodySchema = UserSchema.pick({
+  email: true,
+})
+
+export const VerifyResetCodeBodySchema = UserSchema.pick({
+  email: true,
+}).extend({
+  code: z.string().length(6),
+  tempToken: z.string().regex(REGEX.uuid, 'tempToken không hợp lệ'),
+})
+
+export const ResetPasswordBodySchema = UserSchema.pick({
+  id: true,
+})
+  .extend({
+    tempToken: z.string().regex(REGEX.uuid, 'tempToken không hợp lệ'),
     newPassword: z.string().min(6).max(50),
     confirmNewPassword: z.string().min(6).max(50),
   })
@@ -213,7 +233,9 @@ export type RefreshTokenType = z.infer<typeof RefreshTokenSchema>
 export type LogoutBodyType = RefreshTokenBodyType
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
-export type ForgotPasswordType = z.infer<typeof ForgotPasswordSchema>
+export type ForgotPasswordType = z.infer<typeof ForgotPasswordBodySchema>
 export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
 export type TwoFactorSetupResType = z.infer<typeof TwoFactorSetupResSchema>
 export type VerifyLoginBodyType = z.infer<typeof VerifyLoginBodySchema>
+export type VerifyResetCodeBodyType = z.infer<typeof VerifyResetCodeBodySchema>
+export type ResetPasswordBodyType = z.infer<typeof ResetPasswordBodySchema>
