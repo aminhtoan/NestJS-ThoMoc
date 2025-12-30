@@ -31,7 +31,6 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { TwoFactorAuthService } from './two-factor.service'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import type { RedisClientType } from 'redis'
-import { VerificationCodeType } from '@prisma/client'
 import { TypeTempRedis } from 'src/shared/constants/redis.constant'
 
 @Injectable()
@@ -477,11 +476,7 @@ export class AuthService {
         if (session) {
           // Vẫn còn phiên → trả về phiên cũ
           return {
-            data: {
-              name_folder_redis: TypeTempRedis.FORGOT_PASSWORD_TEMP,
-              tempToken: oldTempToken,
-              reused: true,
-            },
+            tempToken: oldTempToken,
           }
         }
       }
@@ -498,15 +493,8 @@ export class AuthService {
       // lưu session theo userId
       await this.redis.set(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`, tempToken, { EX: 300 })
 
-      await this.sendOTP({
-        type: VerificationCodeType.FORGOT_PASSWORD,
-        email: existedEmail.email,
-      })
       return {
-        data: {
-          name_folder_redis: TypeTempRedis.FORGOT_PASSWORD_TEMP,
-          tempToken,
-        },
+        tempToken,
       }
     } catch (error) {
       console.error('[AuthService:ForgotPassword]', error)
@@ -561,13 +549,13 @@ export class AuthService {
 
   async resetPassword(body: ResetPasswordBodyType) {
     try {
-      const { newPassword, confirmNewPassword } = body
+      const { newPassword, confirmNewPassword, email, tempToken } = body
 
       if (confirmNewPassword !== newPassword) {
         throw new BadRequestException('Mật khẩu xác nhận không khớp')
       }
 
-      const temp = await this.redis.get(`${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${body.tempToken}`)
+      const temp = await this.redis.get(`${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${tempToken}`)
       if (!temp) {
         throw new UnprocessableEntityException([
           {
@@ -577,15 +565,13 @@ export class AuthService {
         ])
       }
 
-      const session = JSON.parse(temp)
-      const userId = session.userId
       // hash password
       const hashedPassword = await this.hashingService.hash(body.newPassword)
 
       // update password
       await this.authRespository.updateUser(
         {
-          id: userId,
+          email: email,
         },
         { password: hashedPassword },
       )

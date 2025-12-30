@@ -11,6 +11,7 @@ import { AuthenticationGuard } from './shared/guards/authentication.guard'
 import { MyThrottlerGuard } from './shared/guards/custom-throttler.guard'
 import CustomZodValidationPipe from './shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from './shared/shared.module'
+import { PermissionModule } from './routes/permission/permission.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SharedModule } from './shared/shared.module'
       ],
     }),
     LanguagesModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [

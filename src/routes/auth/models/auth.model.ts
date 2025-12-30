@@ -1,4 +1,3 @@
-import { truncate } from 'fs'
 import { TypeofVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
 import { REGEX } from 'src/shared/constants/regex.constant'
 import { email, z } from 'zod'
@@ -152,16 +151,6 @@ export const GetAuthorizationUrlResSchema = z.object({
   url: z.string().url(),
 })
 
-// // forgot password
-// export const ForgotPasswordSchema = z
-//   .object({
-//     email: z.string().email(),
-//     code: z.string().length(6),
-//     newPassword: z.string().min(6).max(50),
-//     confirmNewPassword: z.string().min(6).max(50),
-//   })
-
-// forgot password
 export const ForgotPasswordBodySchema = UserSchema.pick({
   email: true,
 })
@@ -174,7 +163,7 @@ export const VerifyResetCodeBodySchema = UserSchema.pick({
 })
 
 export const ResetPasswordBodySchema = UserSchema.pick({
-  id: true,
+  email: true,
 })
   .extend({
     tempToken: z.string().regex(REGEX.uuid, 'tempToken không hợp lệ'),
