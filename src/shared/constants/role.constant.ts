@@ -13,3 +13,5 @@ export const HTTPsMethod = {
   OPTIONS: 'OPTIONS',
   HEAD: 'HEAD',
 } as const
+
+export type HTTPsMethodType = (typeof HTTPsMethod)[keyof typeof HTTPsMethod]
