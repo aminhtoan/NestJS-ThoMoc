@@ -7,55 +7,79 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from 'src/app.module'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
-interface Routes {
-  name: string
-  description: string
-  path: string
-  method: HTTPsMethodType
-}
 async function bootstrap() {
   const prisma = new PrismaService()
-  const existingCount = await prisma.permission.count()
   const app = await NestFactory.create(AppModule)
   await app.listen(3000)
   const server = app.getHttpAdapter().getInstance()
+  const existingCount = await prisma.permission.count()
+  const permissionsInDb = await prisma.permission.findMany({
+    where: {
+      deletedAt: null,
+    },
+  })
   const router = server.router
 
   console.log(`Hiện có ${existingCount} permissions trong DB`)
 
-  const availableRoutes: [] = router.stack
-    .map((layer) => {
-      if (layer.route) {
-        return {
-          path: layer.route?.path,
-          method: String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPsMethod,
+  const availableRoutes: { path: string; method: keyof typeof HTTPsMethod; name: string; description: string }[] =
+    router.stack
+      .map((layer) => {
+        if (layer.route) {
+          const path = layer.route?.path
+          const method = String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPsMethod
+          return {
+            path,
+            method,
+            name: method + path,
+            description: `Access to ${method} ${path}`,
+          }
         }
-      }
+      })
+      .filter((item) => item !== undefined)
+
+  const permissionInDbMap: Record<string, (typeof permissionsInDb)[0]> = permissionsInDb.reduce((acc, item) => {
+    acc[`${item.method}` + '-' + `${item.path}`] = item
+    return acc
+  }, {})
+
+  const availableRoutesMap: Record<string, (typeof availableRoutes)[0]> = availableRoutes.reduce((acc, item) => {
+    acc[`${item.method}` + '-' + `${item.path}`] = item
+    return acc
+  }, {})
+
+  const permissionsToDelete = permissionsInDb.filter((item) => {
+    return !availableRoutesMap[`${item.method}-${item.path}`]
+  })
+
+  if (permissionsToDelete.length > 0) {
+    const deleteResult = await prisma.permission.deleteMany({
+      where: {
+        id: {
+          in: permissionsToDelete.map((item) => item.id),
+        },
+      },
     })
-    .filter((item) => item !== undefined)
+    console.log('Deleted permissions:', deleteResult.count)
+  } else {
+    console.log('No permission to deleted')
+  }
 
-  const permissions = availableRoutes.map((route: Routes) => ({
-    name: `${route.method} ${route.path}`,
-    description: `Access to ${route.method} ${route.path}`,
-    path: route.path,
-    method: route.method,
-  }))
+  // Tìm routes mà không tồn tại trong permissionsInDb
+  const routesToAdd = availableRoutes.filter((item) => {
+    return !permissionInDbMap[`${item.method}-${item.path}`]
+  })
 
-  console.log(`Tìm thấy ${permissions.length} routes`)
-
-  try {
-    const result = await prisma.permission.createMany({
-      data: permissions,
+  if (routesToAdd.length > 0) {
+    const permissionsToAdd = await prisma.permission.createMany({
+      data: routesToAdd,
       skipDuplicates: true,
     })
-    console.log(`Đã tạo ${result.count} permissions mới`)
-    console.log(`Bỏ qua ${permissions.length - result.count} permissions đã tồn tại`)
-  } catch (error) {
-    console.log('[Erorr:Create-Permisson]: ', error)
-    process.exit(1)
-  } finally {
-    await app.close()
-    process.exit(0)
+    console.log('Added permissions:', permissionsToAdd.count)
+  } else {
+    console.log('No permission to add')
   }
+  await app.close()
+  process.exit(0)
 }
 bootstrap()
