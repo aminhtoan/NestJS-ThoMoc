@@ -6,7 +6,8 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { addMilliseconds } from 'date-fns'
-import ms, { type StringValue } from 'ms'
+import ms from 'ms'
+import type { StringValue } from 'ms'
 import envConfig from 'src/shared/config'
 import { TypeofVerificationCode, TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { generateOTP, isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
@@ -139,6 +140,7 @@ export class AuthService {
 
   async sendOTP(body: SendOTPBodyType) {
     try {
+      console.log(body)
       const user = await this.sharedUserRepository.findUnique({ email: body.email })
 
       if (user && body.type === TypeofVerificationCode.REGISTER) {
@@ -162,6 +164,7 @@ export class AuthService {
       // gernerate OTP 6 số ngẫu nhiên
       const code = generateOTP()
 
+      console.log(code)
       // tạo verification code với hạn là 5m
       await this.authRespository.createVerification({
         email: body.email,
@@ -231,7 +234,7 @@ export class AuthService {
 
   async login(body: LoginBodyType & { ip: string; userAgent: string }) {
     const temp = await this.redis.get(`login-temp:${body.tempToken}`)
-    if (!temp) {
+    if (typeof temp !== 'string') {
       throw new UnprocessableEntityException([
         {
           message: 'Phiên đăng nhập hết hạn hoặc không hợp lệ',

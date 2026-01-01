@@ -1,9 +1,9 @@
-import { OTPEmail } from '../../../emails/plaid-verify-identity';
+import { OTPEmail } from '../../../emails/plaid-verify-identity'
 import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 import { Resend } from 'resend'
 import envConfig from '../config'
 import * as fs from 'fs'
-import path from 'path'
+import * as path from 'path'
 
 @Injectable()
 export class SendEmail {
@@ -13,6 +13,7 @@ export class SendEmail {
   }
   async sendEmail(payload: { email: string; code: string }) {
     try {
+      console.log(payload)
       const templatePath = path.join(process.cwd(), 'src/shared/email-templates/otp.html')
       let htmlTemplate = fs.readFileSync(templatePath, 'utf-8')
       const subject = 'Verify your new Shopping account'
@@ -23,10 +24,11 @@ export class SendEmail {
         from: 'Thổ Mộc <no-reply@miti.io.vn>',
         to: [payload.email],
         subject,
-        react: <OTPEmail  otpCode={payload.code} titlee= {subject} />
+        react: <OTPEmail otpCode={payload.code} titlee={subject} />,
       })
       return data
     } catch (error) {
+      console.log(error)
       throw new UnprocessableEntityException([
         {
           message: 'Lỗi gửi otp',
