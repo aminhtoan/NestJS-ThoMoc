@@ -25,12 +25,13 @@ export class RoleService {
         },
       ])
     }
+
     const user = await this.sharedUserRepository.findUnique({ id: userId })
 
     if (!user) {
       throw new UnprocessableEntityException([
         {
-          message: 'Không tìn thấy thông tin đăng nhập của bạn',
+          message: 'Không tìm thấy thông tin đăng nhập của bạn',
           path: 'id',
         },
       ])
@@ -44,30 +45,30 @@ export class RoleService {
     }
   }
 
-  async findByName(params: GetRoleParamsType) {
+  async findById(params: GetRoleParamsType) {
     try {
-      const normalizedName = this.roleRepository.normalizeRoleName(params.roleName)
-
-      return await this.roleRepository.findByName(normalizedName)
+      return await this.roleRepository.findById(params.roleId)
     } catch (error) {
       console.log('[Error:FindByIdService] ', error)
       if (isRecordNotFoundError(error)) {
-        throw new NotFoundException('Không tìn thấy thông tin Role.')
+        throw new NotFoundException('Không tìm thấy thông tin Role.')
       }
       throw error
     }
   }
 
   async update(body: UpdateRoleBodyType, userId: number, params: GetRoleParamsType) {
-    const targetName = this.roleRepository.normalizeRoleName(params.roleName)
-    const newName = this.roleRepository.normalizeRoleName(body.name)
+    const newName = body.name ? this.roleRepository.normalizeRoleName(body.name) : undefined
 
-    const currentRole = await this.roleRepository.findByName(targetName)
+    const currentRole = await this.roleRepository.findById(params.roleId)
+
     if (!currentRole) {
       throw new NotFoundException('Role cần cập nhật không tồn tại.')
     }
-    if (targetName !== newName) {
+
+    if (newName && currentRole.name !== newName) {
       const duplicateRole = await this.roleRepository.findByName(newName)
+
       if (duplicateRole) {
         throw new UnprocessableEntityException([
           {
@@ -83,19 +84,55 @@ export class RoleService {
     if (!user) {
       throw new UnprocessableEntityException([
         {
-          message: 'Không tìn thấy thông tin đăng nhập của bạn',
+          message: 'Không tìm thấy thông tin đăng nhập của bạn',
           path: 'id',
         },
       ])
     }
+
     try {
-      const data = { ...body, name: newName, updatedById: user.id }
-      await this.roleRepository.update(data, params)
+      const updateData: any = { ...body, updatedById: user.id }
+
+      if (newName !== undefined) {
+        updateData.name = newName
+      } else {
+        delete updateData.name
+      }
+
+      await this.roleRepository.update(updateData, params)
+
       return {
         message: 'Cập nhật thành công',
       }
     } catch (error) {
       this.logger.error(`Failed to update role: ${error.message}`, error.stack)
+      throw error
+    }
+  }
+
+  async delete(userId: number, params: GetRoleParamsType) {
+    await this.findById(params)
+
+    const user = await this.sharedUserRepository.findUnique({ id: userId })
+
+    if (!user) {
+      throw new UnprocessableEntityException([
+        {
+          message: 'Không tìm thấy thông tin đăng nhập của bạn',
+          path: 'id',
+        },
+      ])
+    }
+
+    try {
+      const hard = false
+      await this.roleRepository.delete(userId, params, hard)
+
+      return {
+        message: 'Role đã được xóa.',
+      }
+    } catch (error) {
+      console.log('[Error:DeleteService] ', error)
       throw error
     }
   }

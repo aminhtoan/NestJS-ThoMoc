@@ -22,7 +22,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "email:dev": "email dev",
     "email:build": "email build",
-    "email:export": "email export"
+    "email:export": "email export",
+    "postinstall": "prisma generate"
+
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

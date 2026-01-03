@@ -21,7 +21,7 @@ export const CreateRoleBodySchema = RoleSchema.pick({
 export const GetRoleDetailResSchema = RoleSchema
 
 export const GetRoleParamsSchema = z.object({
-  roleName: z.string(),
+  roleId: z.coerce.number().int().positive(),
 })
 
 export const UpdateRoleBodySchema = RoleSchema.pick({
