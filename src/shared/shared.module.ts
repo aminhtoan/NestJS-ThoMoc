@@ -10,8 +10,17 @@ import { APP_GUARD } from '@nestjs/core'
 import { SharedUserRepository } from './repositories/shared-user.repo'
 import { SendEmail } from './services/email.service'
 import { RedisServices } from './services/redis.service'
+import { SharedPermissionRepository } from './repositories/shared-permission'
 
-const sharedServices = [PrismaService, HashingService, TokenService, SharedUserRepository, SendEmail, RedisServices]
+const sharedServices = [
+  PrismaService,
+  HashingService,
+  TokenService,
+  SharedUserRepository,
+  SendEmail,
+  RedisServices,
+  SharedPermissionRepository,
+]
 
 @Global()
 @Module({

@@ -1,6 +1,7 @@
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { CreateRoleBodyType, GetRoleParamsType, GetRoleDetailResType, RoleType, UpdateRoleBodyType } from './role.model'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class RoleRepository {
@@ -11,6 +12,9 @@ export class RoleRepository {
   ): Promise<GetRoleDetailResType> {
     return this.prismaService.role.create({
       data: body,
+      include: {
+        permissions: true,
+      },
     })
   }
 
@@ -18,6 +22,9 @@ export class RoleRepository {
     return await this.prismaService.role.findUnique({
       where: {
         name: roleName,
+      },
+      include: {
+        permissions: true,
       },
     })
   }
@@ -27,6 +34,13 @@ export class RoleRepository {
       where: {
         id: roleId,
       },
+      include: {
+        permissions: {
+          where: {
+            deletedAt: null,
+          },
+        },
+      },
     })
   }
 
@@ -34,12 +48,28 @@ export class RoleRepository {
     data: UpdateRoleBodyType & Pick<RoleType, 'updatedById'>,
     params: GetRoleParamsType,
   ): Promise<GetRoleDetailResType> {
+    const updatePayload: Prisma.RoleUncheckedUpdateInput = {
+      name: data.name,
+      description: data.description,
+      isActive: data.isActive,
+      updatedById: data.updatedById,
+    }
+
+    if ('permissionIds' in data && data.permissionIds !== undefined) {
+      if (data.permissionIds.length > 0) {
+        updatePayload.permissions = {
+          set: data.permissionIds.map((id) => ({ id })),
+        }
+      }
+    }
     return this.prismaService.role.update({
       where: {
         id: params.roleId,
-        deletedAt: null,
       },
-      data,
+      data: updatePayload,
+      include: {
+        permissions: true,
+      },
     })
   }
 

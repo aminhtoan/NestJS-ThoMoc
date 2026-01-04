@@ -1,3 +1,4 @@
+import { PermissionSchema } from 'src/shared/models/shared-permission.model'
 import z from 'zod'
 
 export const RoleSchema = z.object({
@@ -18,7 +19,9 @@ export const CreateRoleBodySchema = RoleSchema.pick({
   description: true,
 })
 
-export const GetRoleDetailResSchema = RoleSchema
+export const GetRoleDetailResSchema = RoleSchema.extend({
+  permissions: z.array(PermissionSchema),
+})
 
 export const GetRoleParamsSchema = z.object({
   roleId: z.coerce.number().int().positive(),
@@ -28,7 +31,9 @@ export const UpdateRoleBodySchema = RoleSchema.pick({
   name: true,
   description: true,
   isActive: true,
-}).partial()
+})
+  .partial()
+  .extend({ permissionIds: z.array(z.number().int()).optional() })
 
 export type RoleType = z.infer<typeof RoleSchema>
 export type CreateRoleBodyType = z.infer<typeof CreateRoleBodySchema>

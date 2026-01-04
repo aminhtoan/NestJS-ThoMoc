@@ -2,7 +2,10 @@ import { Injectable, Logger, NotFoundException, UnprocessableEntityException } f
 import { CreateRoleBodyType, GetRoleParamsType, UpdateRoleBodyType } from './role.model'
 import { RoleRepository } from './role.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
-import { isRecordNotFoundError } from 'src/shared/helpers'
+import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
+import { PermissionService } from '../permission/permission.service'
+import { GetPermissionParamType } from '../permission/permission.model'
+import { SharedPermissionRepository } from 'src/shared/repositories/shared-permission'
 
 @Injectable()
 export class RoleService {
@@ -10,6 +13,7 @@ export class RoleService {
   constructor(
     private readonly roleRepository: RoleRepository,
     private readonly sharedUserRepository: SharedUserRepository,
+    private readonly sharedPermissionRepository: SharedPermissionRepository,
   ) {}
 
   async create(body: CreateRoleBodyType, userId: number) {
@@ -57,7 +61,22 @@ export class RoleService {
     }
   }
 
+  async findByIdPermission(params: GetPermissionParamType) {
+    try {
+      await this.sharedPermissionRepository.findById(params.permissionId)
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Không tìm thấy thông tin Permission.')
+      }
+      throw error
+    }
+  }
   async update(body: UpdateRoleBodyType, userId: number, params: GetRoleParamsType) {
+    if (body.permissionIds && body.permissionIds.length > 0) {
+      const permissionPromises = body.permissionIds.map((id) => this.findByIdPermission({ permissionId: id }))
+      await Promise.all(permissionPromises)
+    }
+
     const newName = body.name ? this.roleRepository.normalizeRoleName(body.name) : undefined
 
     const currentRole = await this.roleRepository.findById(params.roleId)
@@ -106,6 +125,14 @@ export class RoleService {
       }
     } catch (error) {
       this.logger.error(`Failed to update role: ${error.message}`, error.stack)
+      if (isUniqueConstraintError(error)) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Tên Role đã tồn tại (Lỗi hệ thống)',
+            path: 'name',
+          },
+        ])
+      }
       throw error
     }
   }
