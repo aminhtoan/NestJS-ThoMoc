@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
-import { CreateRoleBodyType, GetRoleParamsType, UpdateRoleBodyType } from './role.model'
+import { CreateRoleBodyType, GetRoleParamsType, GetRoleQueryType, UpdateRoleBodyType } from './role.model'
 import { RoleRepository } from './role.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
@@ -162,5 +162,14 @@ export class RoleService {
       console.log('[Error:DeleteService] ', error)
       throw error
     }
+  }
+
+  async list(pagination: GetRoleQueryType) {
+     try {
+       const res = await this.roleRepository.list(pagination)
+       return res
+     } catch (error) {
+       throw error
+     }
   }
 }

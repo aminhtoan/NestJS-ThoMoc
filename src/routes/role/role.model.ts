@@ -35,8 +35,25 @@ export const UpdateRoleBodySchema = RoleSchema.pick({
   .partial()
   .extend({ permissionIds: z.array(z.number().int()).optional() })
 
+export const GetRoleQueryResSchema = z.object({
+  data: z.array(GetRoleDetailResSchema),
+  page: z.number(),
+  limit: z.number(),
+  totalItems: z.number(),
+  totalPages: z.number(),
+})
+
+export const GetRoleQuerySchema = z
+  .object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().default(10),
+  })
+  .strict()
+
 export type RoleType = z.infer<typeof RoleSchema>
 export type CreateRoleBodyType = z.infer<typeof CreateRoleBodySchema>
 export type GetRoleDetailResType = z.infer<typeof GetRoleDetailResSchema>
 export type GetRoleParamsType = z.infer<typeof GetRoleParamsSchema>
 export type UpdateRoleBodyType = z.infer<typeof UpdateRoleBodySchema>
+export type GetRoleQueryResType = z.infer<typeof GetRoleQueryResSchema>
+export type GetRoleQueryType = z.infer<typeof GetRoleQuerySchema>
