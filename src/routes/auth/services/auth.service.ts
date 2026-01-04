@@ -140,7 +140,6 @@ export class AuthService {
 
   async sendOTP(body: SendOTPBodyType) {
     try {
-      console.log(body)
       const user = await this.sharedUserRepository.findUnique({ email: body.email })
 
       if (user && body.type === TypeofVerificationCode.REGISTER) {
@@ -164,7 +163,6 @@ export class AuthService {
       // gernerate OTP 6 số ngẫu nhiên
       const code = generateOTP()
 
-      console.log(code)
       // tạo verification code với hạn là 5m
       await this.authRespository.createVerification({
         email: body.email,

@@ -3,7 +3,6 @@ import { CreateRoleBodyType, GetRoleParamsType, GetRoleQueryType, UpdateRoleBody
 import { RoleRepository } from './role.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
-import { PermissionService } from '../permission/permission.service'
 import { GetPermissionParamType } from '../permission/permission.model'
 import { SharedPermissionRepository } from 'src/shared/repositories/shared-permission'
 
@@ -72,6 +71,7 @@ export class RoleService {
     }
   }
   async update(body: UpdateRoleBodyType, userId: number, params: GetRoleParamsType) {
+    console.log(body.permissionIds.length, body.permissionIds)
     if (body.permissionIds && body.permissionIds.length > 0) {
       const permissionPromises = body.permissionIds.map((id) => this.findByIdPermission({ permissionId: id }))
       await Promise.all(permissionPromises)
@@ -165,11 +165,11 @@ export class RoleService {
   }
 
   async list(pagination: GetRoleQueryType) {
-     try {
-       const res = await this.roleRepository.list(pagination)
-       return res
-     } catch (error) {
-       throw error
-     }
+    try {
+      const res = await this.roleRepository.list(pagination)
+      return res
+    } catch (error) {
+      throw error
+    }
   }
 }

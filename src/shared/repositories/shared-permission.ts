@@ -6,18 +6,11 @@ import { GetRoleDetailResType } from 'src/routes/role/role.model'
 export class SharedPermissionRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findById(id: number): Promise<GetRoleDetailResType> {
-    return await this.prismaService.role.findUniqueOrThrow({
+  async findById(id: number): Promise<any> {
+    return await this.prismaService.permission.findUniqueOrThrow({
       where: {
-        id,
+        id: id,
         deletedAt: null,
-      },
-      include: {
-        permissions: {
-          where: {
-            deletedAt: null,
-          },
-        },
       },
     })
   }

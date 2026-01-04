@@ -1,5 +1,4 @@
-import { ConflictException, Inject, Injectable, UnprocessableEntityException } from '@nestjs/common'
-import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
+import { ConflictException, Inject, Injectable } from '@nestjs/common'
 import * as OTPAuth from 'otpauth'
 import envConfig from 'src/shared/config'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'

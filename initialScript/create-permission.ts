@@ -26,7 +26,10 @@ async function bootstrap() {
     router.stack
       .map((layer) => {
         if (layer.route) {
-          const path = layer.route?.path
+          let path = layer.route?.path
+          if (!path.startsWith('/api')) {
+            path = '/api' + path
+          }
           const method = String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPsMethod
           return {
             path,
