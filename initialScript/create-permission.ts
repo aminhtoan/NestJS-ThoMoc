@@ -1,4 +1,4 @@
-import { HTTPsMethod, HTTPsMethodType } from 'src/shared/constants/role.constant'
+import { HTTPsMethod, HTTPsMethodType, RoleName } from 'src/shared/constants/role.constant'
 // Source - https://stackoverflow.com/a/63333671
 // Posted by oviniciusfeitosa, modified by community. See post 'Timeline' for change history
 // Retrieved 2025-12-31, License - CC BY-SA 4.0
@@ -79,6 +79,25 @@ async function bootstrap() {
   } else {
     console.log('No permission to add')
   }
+
+  const updatedPermissionInDB = await prisma.permission.findMany({
+    where: {
+      deletedAt: null,
+    },
+  })
+
+  await prisma.role.update({
+    where: {
+      name: RoleName.Admin,
+    },
+    data: {
+      permissions: {
+        set: updatedPermissionInDB.map((item) => ({
+          id: item.id,
+        })),
+      },
+    },
+  })
   await app.close()
   process.exit(0)
 }
