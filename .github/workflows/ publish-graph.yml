@@ -2,6 +2,7 @@ name: Tho Moc Production Deployment
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
 on:
   push:
     branches:
@@ -10,7 +11,7 @@ on:
     branches:
       - main
     types:
-      - closed # sửa lại, vì GitHub không có type "merged"
+      - closed
 jobs:
   Deploy-Production:
     runs-on: ubuntu-latest
