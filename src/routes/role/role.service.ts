@@ -1,10 +1,11 @@
-import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { ForbiddenException, Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { CreateRoleBodyType, GetRoleParamsType, GetRoleQueryType, UpdateRoleBodyType } from './role.model'
 import { RoleRepository } from './role.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
 import { GetPermissionParamType } from '../permission/permission.model'
 import { SharedPermissionRepository } from 'src/shared/repositories/shared-permission'
+import { RoleName, RoleNameType } from 'src/shared/constants/role.constant'
 
 @Injectable()
 export class RoleService {
@@ -71,14 +72,22 @@ export class RoleService {
     }
   }
   async update(body: UpdateRoleBodyType, userId: number, params: GetRoleParamsType) {
+    const currentRole = await this.roleRepository.findById(params.roleId)
+
+    /*Để hệ thống hoạt động ổn định thì ta nên
+    -Không cho phép bất kỳ ai có thể xóa 3 role cơ bản này: ADMIN, CLIENT, SELLER.
+    Không cho bất kỳ ai cập nhật role ADMIN, kể cả user với role ADMIN. 
+    Tránh ADMIN này thay đổi permission làm mất quyền kiểm soát hệ thống.*/
+    if (RoleName.Admin === currentRole.name) {
+      throw new ForbiddenException('Bạn không có quyền chỉnh sửa tài nguyên này')
+    }
+
     if (body.permissionIds && body.permissionIds.length > 0) {
       const permissionPromises = body.permissionIds.map((id) => this.findByIdPermission({ permissionId: id }))
       await Promise.all(permissionPromises)
     }
 
     const newName = body.name ? this.roleRepository.normalizeRoleName(body.name) : undefined
-
-    const currentRole = await this.roleRepository.findById(params.roleId)
 
     if (!currentRole) {
       throw new NotFoundException('Role cần cập nhật không tồn tại.')
@@ -137,7 +146,11 @@ export class RoleService {
   }
 
   async delete(userId: number, params: GetRoleParamsType) {
-    await this.findById(params)
+    const role = await this.findById(params)
+
+    if ([RoleName.Admin, RoleName.Client, RoleName.Seller].includes(role.name as RoleNameType)) {
+      throw new ForbiddenException('Bạn không có quyền chỉnh sửa tài nguyên này')
+    }
 
     const user = await this.sharedUserRepository.findUnique({ id: userId })
 
