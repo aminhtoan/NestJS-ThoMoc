@@ -1,3 +1,4 @@
+import { error } from 'console'
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common'
 import { TokenService } from '../services/token.service'
 import { REQUEST_USER_KEY } from '../constants/auth.constant'
@@ -24,7 +25,14 @@ export class AccessTokenGuard implements CanActivate {
       await this.validateUserPermission(decodedAccessToken, request)
 
       return true
-    } catch {
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw error
+      }
+
+      if (error instanceof UnauthorizedException) {
+        throw error
+      }
       throw new UnauthorizedException('Invalid access token')
     }
   }
@@ -54,7 +62,7 @@ export class AccessTokenGuard implements CanActivate {
 
     const canAccess = role.permissions.some((permission) => permission.method === method && permission.path === path)
     if (!canAccess) {
-      throw new ForbiddenException()
+      throw new ForbiddenException('Bạn không có quyền truy cập vào tài nguyên này.')
     }
   }
 }

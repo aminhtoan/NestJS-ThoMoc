@@ -71,7 +71,6 @@ export class RoleService {
     }
   }
   async update(body: UpdateRoleBodyType, userId: number, params: GetRoleParamsType) {
-    console.log(body.permissionIds.length, body.permissionIds)
     if (body.permissionIds && body.permissionIds.length > 0) {
       const permissionPromises = body.permissionIds.map((id) => this.findByIdPermission({ permissionId: id }))
       await Promise.all(permissionPromises)
