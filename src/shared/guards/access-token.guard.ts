@@ -47,6 +47,7 @@ export class AccessTokenGuard implements CanActivate {
         where: {
           id: roleId,
           deletedAt: null,
+          isActive: true,
         },
         include: {
           permissions: {
@@ -57,7 +58,7 @@ export class AccessTokenGuard implements CanActivate {
         },
       })
       .catch(() => {
-        throw new ForbiddenException()
+        throw new ForbiddenException('Bạn không có quyền truy cập vào tài nguyên này.')
       })
 
     const canAccess = role.permissions.some((permission) => permission.method === method && permission.path === path)

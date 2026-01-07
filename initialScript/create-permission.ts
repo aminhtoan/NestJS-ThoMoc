@@ -22,24 +22,32 @@ async function bootstrap() {
 
   console.log(`Hiện có ${existingCount} permissions trong DB`)
 
-  const availableRoutes: { path: string; method: keyof typeof HTTPsMethod; name: string; description: string }[] =
-    router.stack
-      .map((layer) => {
-        if (layer.route) {
-          let path = layer.route?.path
-          if (!path.startsWith('/api')) {
-            path = '/api' + path
-          }
-          const method = String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPsMethod
-          return {
-            path,
-            method,
-            name: method + path,
-            description: `Access to ${method} ${path}`,
-          }
+  const availableRoutes: {
+    path: string
+    method: keyof typeof HTTPsMethod
+    name: string
+    description: string
+    module: string
+  }[] = router.stack
+    .map((layer) => {
+      if (layer.route) {
+        let path = layer.route?.path
+        const moduleName = String(path.split('/')[1]).toUpperCase()
+
+        if (!path.startsWith('/api')) {
+          path = '/api' + path
         }
-      })
-      .filter((item) => item !== undefined)
+        const method = String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPsMethod
+        return {
+          path,
+          method,
+          name: method + path,
+          description: `Access to ${method} ${path}`,
+          module: moduleName,
+        }
+      }
+    })
+    .filter((item) => item !== undefined)
 
   const permissionInDbMap: Record<string, (typeof permissionsInDb)[0]> = permissionsInDb.reduce((acc, item) => {
     acc[`${item.method}` + '-' + `${item.path}`] = item

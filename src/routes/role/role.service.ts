@@ -1,4 +1,11 @@
-import { ForbiddenException, Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { CreateRoleBodyType, GetRoleParamsType, GetRoleQueryType, UpdateRoleBodyType } from './role.model'
 import { RoleRepository } from './role.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
@@ -15,6 +22,20 @@ export class RoleService {
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly sharedPermissionRepository: SharedPermissionRepository,
   ) {}
+
+  private async verifyRole(roleId: number, operation: 'edit' | 'delete') {
+    const role = await this.roleRepository.findById(roleId)
+    if (!role) {
+      throw new NotFoundException('Role không tồn tại')
+    }
+    const baseRoles: string[] = [RoleName.Admin, RoleName.Client, RoleName.Seller]
+
+    if (operation === 'delete' && baseRoles.includes(role.name)) {
+      throw new BadRequestException('Không thể xóa các Role mặc định của hệ thống')
+    } else if (operation === 'edit' && role.name === RoleName.Admin) {
+      throw new ForbiddenException('Bạn không có quyền chỉnh sửa tài nguyên này')
+    }
+  }
 
   async create(body: CreateRoleBodyType, userId: number) {
     const normalizedName = this.roleRepository.normalizeRoleName(body.name)
@@ -74,13 +95,14 @@ export class RoleService {
   async update(body: UpdateRoleBodyType, userId: number, params: GetRoleParamsType) {
     const currentRole = await this.roleRepository.findById(params.roleId)
 
+    if (!currentRole) {
+      throw new NotFoundException('Role cần cập nhật không tồn tại.')
+    }
     /*Để hệ thống hoạt động ổn định thì ta nên
     -Không cho phép bất kỳ ai có thể xóa 3 role cơ bản này: ADMIN, CLIENT, SELLER.
     Không cho bất kỳ ai cập nhật role ADMIN, kể cả user với role ADMIN. 
     Tránh ADMIN này thay đổi permission làm mất quyền kiểm soát hệ thống.*/
-    if (RoleName.Admin === currentRole.name) {
-      throw new ForbiddenException('Bạn không có quyền chỉnh sửa tài nguyên này')
-    }
+    await this.verifyRole(params.roleId, 'edit')
 
     if (body.permissionIds && body.permissionIds.length > 0) {
       const permissionPromises = body.permissionIds.map((id) => this.findByIdPermission({ permissionId: id }))
@@ -88,10 +110,6 @@ export class RoleService {
     }
 
     const newName = body.name ? this.roleRepository.normalizeRoleName(body.name) : undefined
-
-    if (!currentRole) {
-      throw new NotFoundException('Role cần cập nhật không tồn tại.')
-    }
 
     if (newName && currentRole.name !== newName) {
       const duplicateRole = await this.roleRepository.findByName(newName)
@@ -146,11 +164,7 @@ export class RoleService {
   }
 
   async delete(userId: number, params: GetRoleParamsType) {
-    const role = await this.findById(params)
-
-    if ([RoleName.Admin, RoleName.Client, RoleName.Seller].includes(role.name as RoleNameType)) {
-      throw new ForbiddenException('Bạn không có quyền chỉnh sửa tài nguyên này')
-    }
+    await this.verifyRole(params.roleId, 'delete')
 
     const user = await this.sharedUserRepository.findUnique({ id: userId })
 

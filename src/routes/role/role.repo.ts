@@ -56,11 +56,23 @@ export class RoleRepository {
     data: UpdateRoleBodyType & Pick<RoleType, 'updatedById'>,
     params: GetRoleParamsType,
   ): Promise<GetRoleDetailResType> {
+    // If isActive is being set to false, set the deletedAt timestamp and deletion info
+
     const updatePayload: Prisma.RoleUncheckedUpdateInput = {
       name: data.name,
       description: data.description,
       isActive: data.isActive,
       updatedById: data.updatedById,
+    }
+
+    // If isActive is being set to true, clear the deletedAt timestamp
+    if (data.isActive === true) {
+      updatePayload.deletedAt = null
+    }
+
+    if (data.isActive === false) {
+      updatePayload.deletedAt = new Date()
+      updatePayload.deletedById = data.updatedById
     }
 
     if ('permissionIds' in data && data.permissionIds !== undefined) {
