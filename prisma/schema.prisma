@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 generator json {
@@ -551,6 +551,7 @@ enum VerificationCodeType {
   FORGOT_PASSWORD
   LOGIN
   DISABLE_2FA
+  CHANGE_PASSWORD
 }
 
 enum UserStatus {

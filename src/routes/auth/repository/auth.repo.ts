@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TypeofVerificationCodeType } from '../../../shared/constants/auth.constant'
 import {
@@ -7,7 +8,7 @@ import {
   ResgisterBodyType,
   RoleType,
   UserType,
-  VerificationCodeType,
+  VerificationCodeType
 } from '../models/auth.model'
 
 @Injectable()
@@ -63,7 +64,7 @@ export class AuthRespository {
       | { email_code_type: { email: string; code: string; type: TypeofVerificationCodeType } },
   ): Promise<VerificationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
-      where: uniqueValue,
+      where: uniqueValue as Prisma.VerificationCodeWhereUniqueInput,
     })
   }
 
@@ -136,7 +137,7 @@ export class AuthRespository {
       | { email_code_type: { email: string; code: string; type: TypeofVerificationCodeType } },
   ) {
     return this.prismaService.verificationCode.delete({
-      where: uniqueValue,
+      where: uniqueValue as Prisma.VerificationCodeWhereUniqueInput,
     })
   }
 

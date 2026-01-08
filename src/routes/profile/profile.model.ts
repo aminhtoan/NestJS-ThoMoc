@@ -1,4 +1,4 @@
-import { UserStatus } from 'src/shared/constants/auth.constant'
+import { TypeofVerificationCode, UserStatus } from 'src/shared/constants/auth.constant'
 import { REGEX } from 'src/shared/constants/regex.constant'
 import z from 'zod'
 import { PermissionSchema } from 'src/shared/models/shared-permission.model'
@@ -41,5 +41,44 @@ export const GetProfileDetailResSchema = UserSchema.omit({
   }),
 })
 
+export const UpdateProfileBodySchema = UserSchema.pick({
+  email: true,
+  name: true,
+  phoneNumber: true,
+  avatar: true,
+}).partial()
+
+export const VerifyEmailSchema = UserSchema.pick({
+  email: true,
+})
+
+export const VerifyEmailCodeSchema = UserSchema.pick({
+  email: true,
+}).extend({
+  code: z.string(),
+  type: z.enum(TypeofVerificationCode),
+})
+
+export const ChangePasswordProfileSchema = z
+  .object({
+    oldPassword: z.string().min(6).max(50),
+    confirmNewPassword: z.string().min(6).max(50),
+    newPassword: z.string().min(6).max(50),
+  })
+  .strict()
+  .superRefine(({ confirmNewPassword, newPassword }, ctx) => {
+    if (newPassword !== confirmNewPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Mật khẩu và mật khẩu xác nhận không khớp',
+        path: ['confirmNewPassword'],
+      })
+    }
+  })
+
 export type UserType = z.infer<typeof UserSchema>
 export type GetProfileDetailResType = z.infer<typeof GetProfileDetailResSchema>
+export type UpdateProfileBodyType = z.infer<typeof UpdateProfileBodySchema>
+export type VerifyEmailType = z.infer<typeof VerifyEmailSchema>
+export type VerifyEmailCodeType = z.infer<typeof VerifyEmailCodeSchema>
+export type ChangePasswordProfileType = z.infer<typeof ChangePasswordProfileSchema>

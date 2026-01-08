@@ -1,5 +1,5 @@
 import z from 'zod'
-import { UserStatus } from '../constants/auth.constant'
+import { TypeofVerificationCode, UserStatus } from '../constants/auth.constant'
 
 const UserSchema = z.object({
   id: z.number(),
@@ -21,4 +21,14 @@ const UserSchema = z.object({
   updatedAt: z.date(),
 })
 
+export const VerificationCode = z.object({
+  id: z.number(),
+  email: z.string(),
+  code: z.string(),
+  type: z.enum(TypeofVerificationCode),
+  expiresAt: z.coerce.date(),
+  createdAt: z.coerce.date(),
+})
+
 export type UserType = z.infer<typeof UserSchema>
+export type VerificationCodeType = z.infer<typeof VerificationCode>

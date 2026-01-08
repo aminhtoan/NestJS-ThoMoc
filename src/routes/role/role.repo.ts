@@ -9,7 +9,6 @@ import {
   GetRoleQueryResType,
 } from './role.model'
 import { Injectable } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class RoleRepository {
@@ -58,7 +57,7 @@ export class RoleRepository {
   ): Promise<GetRoleDetailResType> {
     // If isActive is being set to false, set the deletedAt timestamp and deletion info
 
-    const updatePayload: Prisma.RoleUncheckedUpdateInput = {
+    const updatePayload: any = {
       name: data.name,
       description: data.description,
       isActive: data.isActive,

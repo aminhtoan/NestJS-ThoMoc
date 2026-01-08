@@ -26,6 +26,7 @@ export const TypeofVerificationCode = {
   FORGOT_PASSWORD: 'FORGOT_PASSWORD',
   LOGIN: 'LOGIN',
   DISABLE_2FA: 'DISABLE_2FA',
+  CHANGE_PASSWORD: 'CHANGE_PASSWORD',
 } as const
 
 export type TypeofVerificationCodeType = (typeof TypeofVerificationCode)[keyof typeof TypeofVerificationCode]
