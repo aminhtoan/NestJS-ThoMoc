@@ -61,7 +61,9 @@ export class AccessTokenGuard implements CanActivate {
         throw new ForbiddenException('Bạn không có quyền truy cập vào tài nguyên này.')
       })
 
-    const canAccess = role.permissions.some((permission) => permission.method === method && permission.path === path)
+    const canAccess = role.permissions.some(
+      (permission) => permission.method === method && permission.path === path.replace(/^\/api/, ''),
+    )
     if (!canAccess) {
       throw new ForbiddenException('Bạn không có quyền truy cập vào tài nguyên này.')
     }

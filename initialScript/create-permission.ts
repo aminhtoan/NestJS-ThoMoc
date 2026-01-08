@@ -1,4 +1,4 @@
-import { HTTPsMethod, HTTPsMethodType, RoleName } from 'src/shared/constants/role.constant'
+import { HTTPsMethod, RoleName } from 'src/shared/constants/role.constant'
 // Source - https://stackoverflow.com/a/63333671
 // Posted by oviniciusfeitosa, modified by community. See post 'Timeline' for change history
 // Retrieved 2025-12-31, License - CC BY-SA 4.0
@@ -10,7 +10,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 async function bootstrap() {
   const prisma = new PrismaService()
   const app = await NestFactory.create(AppModule)
-  await app.listen(3000)
+  await app.listen(30010)
   const server = app.getHttpAdapter().getInstance()
   const existingCount = await prisma.permission.count()
   const permissionsInDb = await prisma.permission.findMany({
@@ -31,12 +31,8 @@ async function bootstrap() {
   }[] = router.stack
     .map((layer) => {
       if (layer.route) {
-        let path = layer.route?.path
+        const path = layer.route?.path
         const moduleName = String(path.split('/')[1]).toUpperCase()
-
-        if (!path.startsWith('/api')) {
-          path = '/api' + path
-        }
         const method = String(layer.route?.stack[0].method).toUpperCase() as keyof typeof HTTPsMethod
         return {
           path,
