@@ -6,16 +6,20 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { addMilliseconds } from 'date-fns'
-import ms from 'ms'
 import type { StringValue } from 'ms'
+import ms from 'ms'
+import type { RedisClientType } from 'redis'
 import envConfig from 'src/shared/config'
 import { TypeofVerificationCode, TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
+import { TypeTempRedis } from 'src/shared/constants/redis.constant'
 import { generateOTP, isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { SendEmail } from 'src/shared/services/email.service'
+import { HashingService } from 'src/shared/services/hashing.service'
+import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import { AccessTokenPayLoadCreate } from 'src/shared/types/jwt.type'
 import { TokenService } from '../../../shared/services/token.service'
-import { LoginBodyDTO, RefreshTokenBodyDTO } from '../dto/auth.dto'
+import { RefreshTokenBodyDTO } from '../dto/auth.dto'
 import {
   DisableTwoFactorBodyType,
   ForgotPasswordType,
@@ -28,11 +32,7 @@ import {
 } from '../models/auth.model'
 import { AuthRespository } from '../repository/auth.repo'
 import { RolesService } from './roles.service'
-import { HashingService } from 'src/shared/services/hashing.service'
 import { TwoFactorAuthService } from './two-factor.service'
-import { REDIS_CLIENT } from 'src/shared/services/redis.service'
-import type { RedisClientType } from 'redis'
-import { TypeTempRedis } from 'src/shared/constants/redis.constant'
 
 @Injectable()
 export class AuthService {

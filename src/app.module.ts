@@ -13,6 +13,7 @@ import CustomZodValidationPipe from './shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from './shared/shared.module'
 import { PermissionModule } from './routes/permission/permission.module';
 import { RoleModule } from './routes/role/role.module';
+import { ProfileModule } from './routes/profile/profile.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RoleModule } from './routes/role/role.module';
     LanguagesModule,
     PermissionModule,
     RoleModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [
