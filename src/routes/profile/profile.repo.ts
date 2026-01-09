@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { ChangePasswordProfileType, GetProfileDetailResType, UpdateProfileBodyType, VerifyEmailCodeType } from './profile.model'
+import { GetProfileDetailResType, UpdateProfileBodyType } from './profile.model'
 
 @Injectable()
 export class ProfileRepository {
@@ -38,13 +38,24 @@ export class ProfileRepository {
     })
   }
 
-  async changePassword(body: ChangePasswordProfileType, userId: number) {
+  async changePassword(newPassword: string, userId: number) {
     return this.prismaService.user.update({
       where: {
         id: userId,
       },
       data: {
-        password: body.newPassword,
+        password: newPassword,
+      },
+    })
+  }
+
+  async changeEmail(email: string, userId: number) {
+    return this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        email,
       },
     })
   }

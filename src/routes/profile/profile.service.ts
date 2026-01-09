@@ -1,16 +1,22 @@
-import { email } from 'zod'
 import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { ProfileRepository } from './profile.repo'
-import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
-import { isRecordNotFoundError } from 'src/shared/helpers'
-import { ChangePasswordProfileType, UpdateProfileBodyType, VerifyEmailCodeType } from './profile.model'
-import { AuthService } from '../auth/services/auth.service'
 import { TypeofVerificationCode } from 'src/shared/constants/auth.constant'
+import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
+import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import { HashingService } from 'src/shared/services/hashing.service'
+import { AuthService } from '../auth/services/auth.service'
+import {
+  ChangeEmailProfileType,
+  ChangePasswordProfileType,
+  UpdateProfileBodyType,
+  VerificationCodeType,
+  VerifyEmailCodeType,
+} from './profile.model'
+import { ProfileRepository } from './profile.repo'
 
 @Injectable()
 export class ProfileService {
@@ -18,6 +24,7 @@ export class ProfileService {
     private readonly profileRepository: ProfileRepository,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly userService: AuthService,
+    private readonly hashingService: HashingService,
   ) {}
 
   async getProfile(userId: number) {
@@ -53,12 +60,12 @@ export class ProfileService {
     }
   }
 
-  async verifyEmail(userId: number) {
+  async verifyEmail(userId: number, body: VerificationCodeType) {
     try {
       const user = await this.profileRepository.verifyEmail(userId)
 
       await this.userService.sendOTP({
-        type: TypeofVerificationCode.CHANGE_PASSWORD,
+        type: body.type,
         email: user.email,
       })
 
@@ -86,19 +93,51 @@ export class ProfileService {
         message: 'Xác thực thành công thành công!',
       }
     } catch (error) {
-      console.log(error)
-      throw new InternalServerErrorException('Hệ thống đang bận, vui lòng thử lại sau vài phút.')
+      throw error
     }
   }
 
   async changePassword(body: ChangePasswordProfileType, userId: number) {
     try {
-      await this.profileRepository.changePassword(body, userId)
+      const user = await this.sharedUserRepository.findUnique({ id: userId })
+      const VerifyOldPassword = await this.hashingService.compare(body.oldPassword, user.password)
+
+      if (!VerifyOldPassword) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mật khẩu hiện tại không đúng',
+            path: 'oldPassword',
+          },
+        ])
+      }
+      const hashPassword = await this.hashingService.hash(body.newPassword)
+      console.log(hashPassword)
+      await this.profileRepository.changePassword(hashPassword, userId)
       return {
         message: 'Đổi password thành công!',
       }
     } catch (error) {
       console.log(error)
+      throw error
+    }
+  }
+
+  async changeEmail(body: ChangeEmailProfileType, userId: number) {
+    try {
+      await this.profileRepository.changeEmail(body.newEmail, userId)
+      return {
+        message: 'Đổi email thành công!',
+      }
+    } catch (error) {
+      console.log(error)
+      if (isUniqueConstraintError(error)) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Email này đã được sử dụng bởi tài khoản khác',
+            path: 'newEmail',
+          },
+        ])
+      }
       throw error
     }
   }

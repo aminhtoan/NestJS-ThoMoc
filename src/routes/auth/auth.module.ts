@@ -10,5 +10,6 @@ import { FacebookService } from './services/facebook.service'
 @Module({
   providers: [AuthService, RolesService, AuthRespository, GoogleService, TwoFactorAuthService, FacebookService],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class AuthModule {}

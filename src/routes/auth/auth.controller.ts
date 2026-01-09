@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -9,11 +8,18 @@ import {
   Ip,
   Post,
   Query,
-  Req,
-  Res,
-  UseGuards,
-  UseInterceptors,
+  Res
 } from '@nestjs/common'
+import type { Response } from 'express'
+import { ZodSerializerDto } from 'nestjs-zod'
+import type { RedisClientType } from 'redis'
+import envConfig from 'src/shared/config'
+import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
+import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
+import { MessageResDto } from 'src/shared/dtos/response.dto'
+import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import {
   DisableTwoFactorBodyDTO,
   ForgotPasswordBodyDTO,
@@ -32,20 +38,8 @@ import {
   VerifyResetCodeBodyDTO,
 } from './dto/auth.dto'
 import { AuthService } from './services/auth.service'
-import { ZodSerializerDto } from 'nestjs-zod'
-import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
-import { MessageResDto } from 'src/shared/dtos/response.dto'
-import { GoogleService } from './services/google.service'
-import { Throttle } from '@nestjs/throttler'
-import envConfig from 'src/shared/config'
-import type { Request, Response } from 'express'
-import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
-import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
-import { IsPublic } from 'src/shared/decorators/auth.decorator'
-import type { RedisClientType } from 'redis'
-import { REDIS_CLIENT } from 'src/shared/services/redis.service'
-import { AuthGuard } from '@nestjs/passport'
 import { FacebookService } from './services/facebook.service'
+import { GoogleService } from './services/google.service'
 
 @Controller('auth')
 export class AuthController {

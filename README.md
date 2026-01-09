@@ -66,6 +66,7 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
    - Sau khi hài lòng, apply migration:
      ```bash
      npx prisma migrate dev
+      npx prisma generate
      ```
 ## Hướng dẫn tạo credentials cho Social Login
 

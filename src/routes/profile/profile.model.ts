@@ -42,7 +42,6 @@ export const GetProfileDetailResSchema = UserSchema.omit({
 })
 
 export const UpdateProfileBodySchema = UserSchema.pick({
-  email: true,
   name: true,
   phoneNumber: true,
   avatar: true,
@@ -76,9 +75,32 @@ export const ChangePasswordProfileSchema = z
     }
   })
 
+export const ChangeEmailProfileSchema = z
+  .object({
+    oldEmail: z.string().regex(REGEX.email, 'Email không hợp lệ'),
+    newEmail: z.string().regex(REGEX.email, 'Email không hợp lệ'),
+  })
+  .strict()
+  .superRefine(({ oldEmail, newEmail }, ctx) => {
+    if (oldEmail === newEmail) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Vui lòng không nhập email cũ.',
+        path: ['newEmail'],
+      })
+    }
+  })
+
+export const VerificationCodeSchema = z.object({
+  type: z.enum([TypeofVerificationCode.CHANGE_EMAIL, TypeofVerificationCode.CHANGE_PASSWORD]),
+})
+
 export type UserType = z.infer<typeof UserSchema>
 export type GetProfileDetailResType = z.infer<typeof GetProfileDetailResSchema>
 export type UpdateProfileBodyType = z.infer<typeof UpdateProfileBodySchema>
 export type VerifyEmailType = z.infer<typeof VerifyEmailSchema>
 export type VerifyEmailCodeType = z.infer<typeof VerifyEmailCodeSchema>
 export type ChangePasswordProfileType = z.infer<typeof ChangePasswordProfileSchema>
+export type ChangeEmailProfileType = z.infer<typeof ChangeEmailProfileSchema>
+export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
+

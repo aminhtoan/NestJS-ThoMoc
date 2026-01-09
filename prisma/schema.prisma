@@ -552,6 +552,7 @@ enum VerificationCodeType {
   LOGIN
   DISABLE_2FA
   CHANGE_PASSWORD
+  CHANGE_EMAIL
 }
 
 enum UserStatus {
