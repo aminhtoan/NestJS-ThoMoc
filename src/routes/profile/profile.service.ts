@@ -111,7 +111,6 @@ export class ProfileService {
         ])
       }
       const hashPassword = await this.hashingService.hash(body.newPassword)
-      console.log(hashPassword)
       await this.profileRepository.changePassword(hashPassword, userId)
       return {
         message: 'Đổi password thành công!',

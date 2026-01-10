@@ -11,7 +11,7 @@ import { RoleRepository } from './role.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
 import { GetPermissionParamType } from '../permission/permission.model'
-import { SharedPermissionRepository } from 'src/shared/repositories/shared-permission'
+import { SharedPermissionRepository } from 'src/shared/repositories/shared-permission.repo'
 import { RoleName, RoleNameType } from 'src/shared/constants/role.constant'
 
 @Injectable()

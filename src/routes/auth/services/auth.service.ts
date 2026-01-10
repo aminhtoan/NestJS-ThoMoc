@@ -31,15 +31,23 @@ import {
   VerifyResetCodeBodyType,
 } from '../models/auth.model'
 import { AuthRespository } from '../repository/auth.repo'
-import { RolesService } from './roles.service'
 import { TwoFactorAuthService } from './two-factor.service'
+import { SharedRolesRepo } from 'src/shared/repositories/shared-roles.repo'
+
+interface CreateUserInput {
+  name: string
+  email: string
+  phoneNumber: string
+  password: string
+  roleId: number
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
     private readonly authRespository: AuthRespository,
-    private readonly rolesService: RolesService,
+    private readonly sharedRolesRepo: SharedRolesRepo,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly sendEmail: SendEmail,
     private readonly tokenService: TokenService,
@@ -97,7 +105,7 @@ export class AuthService {
       })
 
       // lấy ra role id, role đc mặc định sãn là client || còn có seller và admin
-      const clientRoleId = await this.rolesService.getClientRoleId()
+      const clientRoleId = await this.sharedRolesRepo.getClientRoleId()
 
       // hash password
       const hashedPassword = await this.hashingService.hash(body.password)
@@ -106,7 +114,7 @@ export class AuthService {
       const { confirmPassword, code, ...restBody } = body
 
       // spread operator để trải dữ liệu ra
-      const userData = {
+      const userData: CreateUserInput = {
         ...restBody,
         roleId: clientRoleId,
         password: hashedPassword,

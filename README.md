@@ -57,6 +57,7 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
    ```bash
    npm run email:dev
    ```
+
 9. Cập nhật schema database an toàn (khi sửa file `prisma/schema.prisma`):
    - Nếu muốn **review hoặc edit migration SQL trước khi apply** (tránh mất data, rename column, copy data...):
      ```bash
@@ -66,8 +67,13 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
    - Sau khi hài lòng, apply migration:
      ```bash
      npx prisma migrate dev
-      npx prisma generate
+     npx prisma generate
      ```
+     
+10. Muốn tạo route tự động:
+    ```bash
+    nest g resource routes/role --no-spec
+    ```
 ## Hướng dẫn tạo credentials cho Social Login
 
 ### 1. Login với Google

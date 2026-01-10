@@ -45,6 +45,7 @@ export class ProfileRepository {
       },
       data: {
         password: newPassword,
+        updatedById: userId,
       },
     })
   }
@@ -56,6 +57,7 @@ export class ProfileRepository {
       },
       data: {
         email,
+        updatedById: userId,
       },
     })
   }
