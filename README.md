@@ -72,7 +72,7 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
      
 10. Muốn tạo route tự động:
     ```bash
-    nest g resource routes/role --no-spec
+    nest g resource [name] --no-spec
     ```
 ## Hướng dẫn tạo credentials cho Social Login
 
