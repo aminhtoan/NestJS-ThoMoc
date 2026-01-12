@@ -23,9 +23,9 @@ export const CreateUserBodySchema = UserSchema.pick({
   email: true,
   name: true,
   phoneNumber: true,
-  avatar: true,
   password: true,
   roleId: true,
+  status: true,
 }).strict()
 
 export const UpdateUserBodySchema = CreateUserBodySchema.partial()

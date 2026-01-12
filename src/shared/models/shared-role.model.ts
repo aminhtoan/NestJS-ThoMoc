@@ -19,3 +19,4 @@ export const GetRoleDetailResSchema = RoleSchema.extend({
 })
 
 export type RoleType = z.infer<typeof RoleSchema>
+export type GetRoleDetailResType = z.infer<typeof GetRoleDetailResSchema>
