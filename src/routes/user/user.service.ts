@@ -1,8 +1,14 @@
 import { SharedRolesRepo } from './../../shared/repositories/shared-roles.repo'
 import { HashingService } from './../../shared/services/hashing.service'
-import { ForbiddenException, Injectable, UnprocessableEntityException } from '@nestjs/common'
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { UserRepository } from './user.repo'
-import { CreateUserBodyType, GetUserParamsType, UpdateUserBodyType } from './user.model'
+import { CreateUserBodyType, GetUserParamsType, GetUserQueryType, UpdateUserBodyType } from './user.model'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
 import { RoleName } from 'src/shared/constants/role.constant'
@@ -16,14 +22,13 @@ export class UserService {
     private readonly sharedRolesRepo: SharedRolesRepo,
   ) {}
 
-  private async verifyRole({ roleNameAgent, roleIdTarget }) {
+  private async verifyRole({ roleNameAgent, roleIdTarget }: { roleNameAgent: string; roleIdTarget: number }) {
     if (roleNameAgent === RoleName.Admin) {
       return true
     } else {
       const adminRoleId = await this.sharedRolesRepo.getAdminRoleId()
-
       if (roleIdTarget === adminRoleId) {
-        throw new ForbiddenException('Không có quyền gán role Admin')
+        throw new ForbiddenException('Không có quyền tác động role Admin')
       }
       return true
     }
@@ -55,14 +60,83 @@ export class UserService {
     }
   }
 
-  async update(params: GetUserParamsType, body: UpdateUserBodyType, userId: number) {
+  async update(params: GetUserParamsType, body: UpdateUserBodyType, userId: number, roleName: string) {
     try {
-      if (body.password) {
-        const hashPassword = this.hashingService.hash(body.password)
+      const dataUpdate = { ...body }
+
+      if (params.userId === userId) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Bạn không thể cập nhật chính mình',
+            path: 'permission',
+          },
+        ])
       }
-      return await this.userRepository.update(body, params, userId)
+      await this.verifyRole({
+        roleNameAgent: roleName,
+        roleIdTarget: body.roleId,
+      })
+
+      if (body.password) {
+        dataUpdate.password = await this.hashingService.hash(body.password)
+      }
+
+      return await this.userRepository.update(dataUpdate, params, userId)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new ConflictException('Email đã được sử dụng')
+      }
+
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Tài khoản không tồn tại')
+      }
       throw error
     }
+  }
+
+  async delete(params: GetUserParamsType, userId: number, roleName: string) {
+    try {
+      const targetUser = await this.sharedUserRepository.findUnique({ id: params.userId })
+      await this.verifyRole({
+        roleNameAgent: roleName,
+        roleIdTarget: targetUser.role.id,
+      })
+
+      if (params.userId === userId) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Bạn không thể xóa chính mình',
+            path: 'permission',
+          },
+        ])
+      }
+
+      const hard = false
+      await this.userRepository.delete(params, userId, hard)
+      return {
+        message: 'Xóa thành công user!!!',
+      }
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Tài khoản không tồn tại')
+      }
+      throw error
+    }
+  }
+
+  async findOne(params: GetUserParamsType) {
+    try {
+      return await this.sharedUserRepository.findUnique({ id: params.userId })
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new NotFoundException('Tài khoản không tồn tại')
+      }
+      throw error
+    }
+  }
+
+  async findMany({ page, limit }: GetUserQueryType) {
+    console.log(page, limit)
+    return await this.userRepository.findPagination({ page, limit })
   }
 }

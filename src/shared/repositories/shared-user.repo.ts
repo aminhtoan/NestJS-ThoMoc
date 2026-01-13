@@ -1,15 +1,22 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../services/prisma.service'
-import { UserType, VerificationCodeType } from '../models/shared-user.model'
+import { UserType, UserWithRoleType, VerificationCodeType } from '../models/shared-user.model'
 import { TypeofVerificationCodeType } from '../constants/auth.constant'
 
 @Injectable()
 export class SharedUserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findUnique(uniqueObject: { email: string } | { id: number }): Promise<UserType | null> {
-    return this.prismaService.user.findUnique({
+  async findUnique(uniqueObject: { email: string } | { id: number }): Promise<UserWithRoleType | null> {
+    return this.prismaService.user.findUniqueOrThrow({
       where: uniqueObject,
+      include: {
+        role: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
     })
   }
 
