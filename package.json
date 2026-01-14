@@ -24,7 +24,6 @@
     "email:build": "email build",
     "email:export": "email export",
     "postinstall": "prisma generate"
-
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -32,7 +31,7 @@
     "@nestjs/devtools-integration": "^0.2.1",
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.1.8",
+    "@nestjs/platform-express": "^11.1.11",
     "@nestjs/swagger": "^11.2.1",
     "@nestjs/throttler": "^6.4.0",
     "@prisma/adapter-pg": "^7.2.0",
@@ -70,6 +69,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.0.0",
     "@types/node": "^22.19.3",
     "@types/pg": "^8.16.0",
     "@types/request-ip": "^0.0.41",

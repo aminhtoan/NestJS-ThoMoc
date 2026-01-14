@@ -1,4 +1,9 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
+
+import { randomInt } from 'crypto'
+
 export function isUniqueConstraintError(error: any): error is PrismaClientKnownRequestError {
   return error instanceof PrismaClientKnownRequestError && error.code === 'P2002'
 }
@@ -8,5 +13,10 @@ export function isRecordNotFoundError(error: any): error is PrismaClientKnownReq
 }
 
 export const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return randomInt(100000, 1000000).toString()
+}
+
+export const generateRandomFileName = (fileName: string): string => {
+  const ext = path.extname(fileName)
+  return `${uuidv4()}${ext}`
 }

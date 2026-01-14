@@ -1,5 +1,3 @@
-Dưới đây là nội dung **README.md** đầy đủ, mình đã viết sẵn thành 1 block markdown hoàn chỉnh. Bạn chỉ cần copy nguyên block này, paste vào file `README.md` ở root project, rồi commit + push lên GitHub là xong – nhìn repo sẽ chuyên nghiệp hẳn! 🚀
-
 ```markdown
 # NestJS-ThoMoc
 

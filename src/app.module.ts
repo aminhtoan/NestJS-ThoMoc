@@ -11,10 +11,11 @@ import { AuthenticationGuard } from './shared/guards/authentication.guard'
 import { MyThrottlerGuard } from './shared/guards/custom-throttler.guard'
 import CustomZodValidationPipe from './shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from './shared/shared.module'
-import { PermissionModule } from './routes/permission/permission.module';
-import { RoleModule } from './routes/role/role.module';
-import { ProfileModule } from './routes/profile/profile.module';
-import { UserModule } from './routes/user/user.module';
+import { PermissionModule } from './routes/permission/permission.module'
+import { RoleModule } from './routes/role/role.module'
+import { ProfileModule } from './routes/profile/profile.module'
+import { UserModule } from './routes/user/user.module'
+import { MediaModule } from './routes/media/media.module'
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserModule } from './routes/user/user.module';
     RoleModule,
     ProfileModule,
     UserModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [
