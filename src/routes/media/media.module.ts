@@ -15,18 +15,22 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const name = generateRandomFileName(file.originalname)
     cb(null, name)
-    // //
-    // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
-    // const ext = extname(file.originalname) // .png, .jpg
-
-    // cb(null, file.fieldname + '-' + uniqueSuffix + ext)
   },
 })
+
+const fileFilter: multer.Options['fileFilter'] = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image/')) {
+    return cb(null, false)
+  }
+
+  cb(null, true)
+}
 
 @Module({
   imports: [
     MulterModule.register({
       storage,
+      fileFilter,
     }),
   ],
   controllers: [MediaController],
