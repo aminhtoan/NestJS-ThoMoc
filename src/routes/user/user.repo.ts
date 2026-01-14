@@ -72,10 +72,12 @@ export class UserRepository {
         },
         skip: offset,
         take: limit,
+        include: {
+          role: true,
+        },
       }),
     ])
 
-    console.log(data)
     const totalPages = Math.ceil(totalItems / limit)
 
     return {

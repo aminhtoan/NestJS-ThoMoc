@@ -1,5 +1,6 @@
 import { UserStatus } from 'src/shared/constants/auth.constant'
 import { REGEX } from 'src/shared/constants/regex.constant'
+import { RoleSchema } from 'src/shared/models/shared-role.model'
 import z from 'zod'
 
 const UserSchema = z.object({
@@ -43,8 +44,18 @@ export const GetUserParamsSchema = z.object({
   userId: z.coerce.number().int().positive(),
 })
 
+export const GetProfileDetailResSchema = UserSchema.omit({
+  totpSecret: true,
+  password: true,
+}).extend({
+  role: RoleSchema.pick({
+    id: true,
+    name: true,
+  }),
+})
+
 export const GetUserQueryResSchema = z.object({
-  data: z.array(UserResponseSchema),
+  data: z.array(GetProfileDetailResSchema),
   page: z.number(),
   limit: z.number(),
   totalItems: z.number(),
