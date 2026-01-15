@@ -9,7 +9,7 @@ export class FileSizeValidationPipe implements PipeTransform {
     } catch {
       throw new BadRequestException('File không phải ảnh hợp lệ')
     }
-    const oneMb = 3 * 1024 * 1024
+    const oneMb = 5 * 1024 * 1024
 
     if (value.size > oneMb) {
       throw new BadRequestException('File vượt quá kích thước cho phép 1MB')
