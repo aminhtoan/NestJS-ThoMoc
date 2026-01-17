@@ -6,5 +6,6 @@ import { LanguagesRespository } from './languages.repo'
 @Module({
   controllers: [LanguagesController],
   providers: [LanguagesService, LanguagesRespository],
+  exports: [LanguagesService, LanguagesRespository],
 })
 export class LanguagesModule {}
