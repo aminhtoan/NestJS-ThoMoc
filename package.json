@@ -41,6 +41,7 @@
     "@types/passport-facebook": "^3.0.4",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.8.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "googleapis": "^164.1.0",

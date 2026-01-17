@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   FileTypeValidator,
   Get,
@@ -11,22 +12,25 @@ import {
   Res,
   UploadedFile,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
-import { FileSizeValidationPipe } from 'src/shared/pipes/file-image-validation.pipe'
-import { MediaService } from './media.service'
+import { Response } from 'express'
+import { promises as fs } from 'fs'
+import path from 'path'
 import envConfig from 'src/shared/config'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
-import path from 'path'
-import { Response } from 'express'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
-import { promises as fs } from 'fs'
+import { FileSizeValidationPipe } from 'src/shared/pipes/file-image-validation.pipe'
+import { CloudinaryService } from 'src/shared/services/cloudinary.service'
+import { MediaService } from './media.service'
 
 @Controller('media')
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(
+    private readonly mediaService: MediaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post('image/upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -40,7 +44,7 @@ export class MediaController {
   }
 
   @Post('images/upload')
-  @UseInterceptors(FilesInterceptor('files', 2))
+  @UseInterceptors(FilesInterceptor('files', 10))
   uploadFiles(
     @UploadedFiles(
       new ParseFilePipe({
@@ -73,6 +77,47 @@ export class MediaController {
       res.sendFile(filePath)
     } catch (err) {
       throw new NotFoundException('File not found')
+    }
+  }
+
+  @Post('image/cloudinary')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImageToCloudinary(
+    @UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,
+    @Body('folder') folder: string,
+  ) {
+    try {
+      const result = await this.cloudinaryService.uploadImage(file.path, folder)
+      return { url: result.secure_url }
+    } catch (error) {
+      console.log('Error uploading', error)
+      throw new Error('Failed to upload image')
+    }
+  }
+
+  @Post('images/cloudinary')
+  @UseInterceptors(FilesInterceptor('files', 5))
+  async uploadImagesToCloudinary(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif)/, skipMagicNumbersValidation: true }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+    @Body('folder') folder: string,
+  ) {
+    try {
+      const result = await this.cloudinaryService.uploadImages(files, folder)
+
+      return result.map((file) => ({
+        url: file.secure_url,
+      }))
+    } catch (error) {
+      console.log('Error uploading', error)
+      throw new Error('Failed to upload image')
     }
   }
 }

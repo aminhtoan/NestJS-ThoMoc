@@ -12,6 +12,7 @@ import { SendEmail } from './services/email.service'
 import { RedisServices } from './services/redis.service'
 import { SharedPermissionRepository } from './repositories/shared-permission.repo'
 import { SharedRolesRepo } from './repositories/shared-roles.repo'
+import { CloudinaryService } from './services/cloudinary.service'
 
 const sharedServices = [
   PrismaService,
@@ -22,6 +23,7 @@ const sharedServices = [
   RedisServices,
   SharedPermissionRepository,
   SharedRolesRepo,
+  CloudinaryService,
 ]
 
 @Global()

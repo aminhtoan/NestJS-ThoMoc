@@ -40,6 +40,9 @@ const configSchema = z.object({
   FACEBOOK_CALLBACK_URL: z.string(),
   FACEBOOK_CLIENT_REDIRECT_URI: z.string(),
   PREFIX_STATIC_ENPOINT: z.string().optional(),
+  CLOUDINARY_CLOUD_NAME: z.string(),
+  CLOUDINARY_API_KEY: z.string(),
+  CLOUDINARY_API_SECRET: z.string(),
 })
 
 const configServer = configSchema.safeParse(process.env)
