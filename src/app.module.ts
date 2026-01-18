@@ -18,6 +18,7 @@ import CustomZodValidationPipe from './shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from './shared/shared.module'
 import { BrandModule } from './routes/brand/brand.module'
 import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
+import { CategoryModule } from './routes/category/category.module';
 import * as path from 'path'
 
 @Module({
@@ -49,6 +50,7 @@ import * as path from 'path'
     UserModule,
     MediaModule,
     BrandModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [
