@@ -9,19 +9,22 @@ import {
   UpdateBrandType,
 } from './brand.model'
 import { Prisma } from '@prisma/client'
+import { All_LANGUAGE_CODE } from 'src/shared/constants/other.constant'
 
 @Injectable()
 export class BrandRespository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  findById(params: GetBrandParamsType): Promise<GetBrandDetailResType> {
+  findById(params: GetBrandParamsType, languageId?: string): Promise<GetBrandDetailResType> {
     return this.prismaService.brand.findFirstOrThrow({
       where: {
         id: params.brandId,
         deletedAt: null,
       },
       include: {
-        brandTranslations: true,
+        brandTranslations: {
+          where: languageId === All_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
+        },
       },
     })
   }
@@ -76,7 +79,7 @@ export class BrandRespository {
         })
   }
 
-  async list({ page, limit }: GetBrandQueryType): Promise<GetBrandQueryResType> {
+  async list({ page, limit }: GetBrandQueryType, languageId?: string): Promise<GetBrandQueryResType> {
     const offset = (page - 1) * limit
 
     const [totalItems, data] = await Promise.all([
@@ -92,7 +95,12 @@ export class BrandRespository {
         skip: offset,
         take: limit,
         include: {
-          brandTranslations: true,
+          brandTranslations: {
+            where: languageId === All_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
         },
       }),
     ])

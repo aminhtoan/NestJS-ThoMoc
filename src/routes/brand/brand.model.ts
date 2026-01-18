@@ -62,6 +62,7 @@ export const GetBrandQuerySchema = z
   .object({
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().default(10),
+    lang: z.string().optional(),
   })
   .strict()
 

@@ -16,10 +16,21 @@ import { AuthenticationGuard } from './shared/guards/authentication.guard'
 import { MyThrottlerGuard } from './shared/guards/custom-throttler.guard'
 import CustomZodValidationPipe from './shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from './shared/shared.module'
-import { BrandModule } from './routes/brand/brand.module';
+import { BrandModule } from './routes/brand/brand.module'
+import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
+import * as path from 'path'
 
 @Module({
   imports: [
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.resolve('src/i18n/'),
+        watch: true,
+      },
+      resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver, new HeaderResolver(['x-lang'])],
+      typesOutputPath: path.resolve('src/generated/i18n.generated.ts'),
+    }),
     SharedModule,
     AuthModule,
     LanguagesModule,

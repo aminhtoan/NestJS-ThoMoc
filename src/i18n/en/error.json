@@ -1,0 +1,4 @@
+{
+    "NOT_FOUND": "The requested resource was not found.",
+    "UNAUTHORIZED": "You are not authorized to access this resource."
+}

@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { isRecordNotFoundError } from 'src/shared/helpers'
 import { CreateBrandType, GetBrandParamsType, GetBrandQueryType, UpdateBrandType } from './brand.model'
 import { BrandRespository } from './brand.repo'
-import { isRecordNotFoundError } from 'src/shared/helpers'
+import { I18nContext, I18nService } from 'nestjs-i18n'
 
 @Injectable()
 export class BrandService {
-  constructor(private readonly brandRespository: BrandRespository) {}
+  constructor(
+    private readonly brandRespository: BrandRespository,
+    private readonly i18n: I18nService,
+  ) {}
   async create(body: CreateBrandType, userId: number) {
     try {
       return this.brandRespository.create(body, userId)
@@ -44,7 +48,7 @@ export class BrandService {
 
   async findById(params: GetBrandParamsType) {
     try {
-      return await this.brandRespository.findById(params)
+      return await this.brandRespository.findById(params, I18nContext.current()?.lang)
     } catch (error) {
       if (isRecordNotFoundError(error)) {
         throw new NotFoundException([
@@ -59,6 +63,7 @@ export class BrandService {
   }
 
   async list({ page, limit }: GetBrandQueryType) {
-    return this.brandRespository.list({ page, limit })
+    // console.log(this.i18n.t('error.NOT_FOUND', { lang: I18nContext.current().lang }))
+    return await this.brandRespository.list({ page, limit }, I18nContext.current()?.lang)
   }
 }
