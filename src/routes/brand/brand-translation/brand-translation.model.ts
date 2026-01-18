@@ -1,6 +1,6 @@
 import z from 'zod'
 
-const BrandTranslationSchema = z.object({
+export const BrandTranslationSchema = z.object({
   id: z.number(),
   brandId: z.number().int().positive({ message: 'brandId phải là số nguyên dương' }),
   languageId: z

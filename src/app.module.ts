@@ -19,6 +19,7 @@ import { SharedModule } from './shared/shared.module'
 import { BrandModule } from './routes/brand/brand.module'
 import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
 import { CategoryModule } from './routes/category/category.module';
+import { ProductModule } from './routes/product/product.module';
 import * as path from 'path'
 
 @Module({
@@ -51,6 +52,7 @@ import * as path from 'path'
     MediaModule,
     BrandModule,
     CategoryModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [

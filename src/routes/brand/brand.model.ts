@@ -1,4 +1,5 @@
 import z from 'zod'
+import { BrandTranslationSchema } from './brand-translation/brand-translation.model'
 
 const BrandSchema = z.object({
   id: z.number(),
@@ -10,24 +11,6 @@ const BrandSchema = z.object({
     .string()
     .min(1, { message: 'Tên thương hiệu không được để trống' })
     .max(500, { message: 'Tên thương hiệu không được vượt quá 500 ký tự' }),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  deletedAt: z.coerce.date().nullable(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-})
-
-const BrandTranslationSchema = z.object({
-  brandId: z.number().int().positive({ message: 'brandId phải là số nguyên dương' }),
-  languageId: z
-    .string()
-    .min(2, { message: 'languageId phải có ít nhất 2 ký tự' })
-    .max(10, { message: 'languageId không được vượt quá 10 ký tự' }),
-  name: z
-    .string()
-    .min(1, { message: 'Tên thương hiệu không được để trống' })
-    .max(500, { message: 'Tên thương hiệu không được vượt quá 500 ký tự' }),
-  description: z.string().optional().default(''), // Nếu không truyền thì mặc định rỗng
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   deletedAt: z.coerce.date().nullable(),
