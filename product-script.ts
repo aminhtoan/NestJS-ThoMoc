@@ -10,12 +10,12 @@ type SKU = {
 }
 const variants: Variant[] = [
   {
-    value: 'Kích thước',
-    options: ['S', 'M', 'L', 'XL'],
+    value: 'Size',
+    options: ['S', 'M', 'L'],
   },
   {
-    value: 'Màu sắc',
-    options: ['Tím', 'Đen', 'Trắng', 'Xanh'],
+    value: 'Color',
+    options: ['Đen', 'Trắng', 'Xám'],
   },
 ]
 
@@ -374,5 +374,5 @@ function generateSKUs(variants: Variant[]): SKU[] {
   }, [])
 }
 
-const skus = generateSKUs(data.product.variants)
-console.log(skus)
+const skus = generateSKUs(variants)
+console.log(JSON.stringify(skus))

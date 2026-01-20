@@ -171,7 +171,7 @@ export class ProductRepository {
     })
     // tìm sku cần để cập nhật
     const skusToUpdate = skusWithId.filter((sku) => sku.id !== null)
-    
+
     // tìm sku cần để tạo mới
     const skusToCreate = skusWithId
       .filter((sku) => sku.id === null)

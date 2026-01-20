@@ -41,7 +41,7 @@ export const VariantsSchema = z.array(VariantSchema).superRefine((variants, ctx)
     const variant = variants[i]
 
     // Kiểm tra xem có variant nào khác trùng tên (value) không
-    const isDifferent = variants.findIndex((v) => v.value === variant.value) !== i
+    const isDifferent = variants.findIndex((v) => v.value.toLowerCase() === variant.value.toLowerCase()) !== i
 
     if (isDifferent) {
       return ctx.addIssue({
@@ -52,7 +52,9 @@ export const VariantsSchema = z.array(VariantSchema).superRefine((variants, ctx)
     }
 
     // 2. Kiểm tra trùng lặp các Options bên trong variant hiện tại
-    const isDifferentOption = variant.options.findIndex((o) => variant.options.indexOf(o)) !== -1
+    const isDifferentOption = variant.options.some((opt, index) => {
+      return variant.options.findIndex((o) => o.toLowerCase() === opt.toLowerCase()) !== index
+    })
 
     if (isDifferentOption) {
       return ctx.addIssue({
@@ -68,8 +70,8 @@ export const ProductSchema = z.object({
   id: z.number(),
   publishedAt: z.coerce.date().nullable(), // Tự động ép kiểu sang Date
   name: z.string().max(500),
-  basePrice: z.number().positive(), // Giá gốc > 0
-  virtualPrice: z.number().positive(), // Giá ảo/giá so sánh > 0
+  basePrice: z.number().min(0),
+  virtualPrice: z.number().min(0),
   brandId: z.number().positive(),
   images: z.array(z.string()),
   variants: VariantsSchema, // Json field represented as a record
