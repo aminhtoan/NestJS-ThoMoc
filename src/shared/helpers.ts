@@ -12,6 +12,11 @@ export function isRecordNotFoundError(error: any): error is PrismaClientKnownReq
   return error instanceof PrismaClientKnownRequestError && error.code === 'P2025'
 }
 
+// p2003
+export function isForeignKeyConstraintError(error: any): error is PrismaClientKnownRequestError {
+  return error instanceof PrismaClientKnownRequestError && error.code === 'P2003'
+}
+
 export const generateOTP = () => {
   return randomInt(100000, 1000000).toString()
 }

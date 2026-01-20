@@ -57,7 +57,7 @@ export class UserRepository {
         })
   }
 
-  async findPagination({ page, limit }: GetUserQueryType): Promise<GetUserQueryResType> {
+  async findPagination({ page, limit }: GetUserQueryType, languageId: string): Promise<GetUserQueryResType> {
     const offset = (page - 1) * limit
 
     const [totalItems, data] = await Promise.all([
@@ -74,6 +74,9 @@ export class UserRepository {
         take: limit,
         include: {
           role: true,
+          userTranslations: {
+            where: languageId ? { deletedAt: null, languageId } : { deletedAt: null },
+          },
         },
       }),
     ])

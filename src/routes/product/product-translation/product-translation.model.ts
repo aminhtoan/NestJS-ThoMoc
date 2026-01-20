@@ -31,7 +31,7 @@ export const CreateProductTranslationBodySchema = ProductTranslationSchema.pick(
   languageId: true,
 }).strict()
 
-export const UpdateProductTranslationBodySchema = CreateProductTranslationBodySchema
+export const UpdateProductTranslationBodySchema = CreateProductTranslationBodySchema.partial()
 
 export type ProductTranslation = z.infer<typeof ProductTranslationSchema>
 export type GetProductTranslationParamsType = z.infer<typeof GetProductTranslationParamsSchema>

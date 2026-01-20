@@ -2,6 +2,7 @@ import { UserStatus } from 'src/shared/constants/auth.constant'
 import { REGEX } from 'src/shared/constants/regex.constant'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
 import z from 'zod'
+import { UserTranslationSchema } from './user-translation/user-translation.model'
 
 const UserSchema = z.object({
   id: z.number(),
@@ -39,6 +40,9 @@ export const UserResponseSchema = UserSchema.omit({
   totpSecret: true,
   deletedAt: true,
 })
+// .extend({
+//   userTranslations: z.array(UserTranslationSchema).optional(),
+// })
 
 export const GetUserParamsSchema = z.object({
   userId: z.coerce.number().int().positive(),
@@ -52,6 +56,7 @@ export const GetProfileDetailResSchema = UserSchema.omit({
     id: true,
     name: true,
   }),
+  userTranslations: z.array(UserTranslationSchema).optional(),
 })
 
 export const GetUserQueryResSchema = z.object({

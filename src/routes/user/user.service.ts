@@ -12,6 +12,7 @@ import { CreateUserBodyType, GetUserParamsType, GetUserQueryType, UpdateUserBody
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
 import { RoleName } from 'src/shared/constants/role.constant'
+import { I18nContext } from 'nestjs-i18n'
 
 @Injectable()
 export class UserService {
@@ -136,7 +137,6 @@ export class UserService {
   }
 
   async findMany({ page, limit }: GetUserQueryType) {
-    console.log(page, limit)
-    return await this.userRepository.findPagination({ page, limit })
+    return await this.userRepository.findPagination({ page, limit, },I18nContext.current()?.lang)
   }
 }
