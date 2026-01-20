@@ -10,25 +10,48 @@ import {
   UpdateProductBodyType,
 } from './product.model'
 import { All_LANGUAGE_CODE } from 'src/shared/constants/other.constant'
+import { de } from 'zod/v4/locales'
 
 @Injectable()
 export class ProductRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async list(query: GetProductsQueryType, languageId: string): Promise<GetProductsResType> {
-    const { page, limit, name, brandIds, categories, minPrice, maxPrice } = query
+  async list({
+    page,
+    limit,
+    name,
+    brandIds,
+    categories,
+    minPrice,
+    maxPrice,
+    createdById,
+    isPublic,
+    languageId,
+  }: {
+    page: number
+    limit: number
+    name?: string
+    brandIds?: number[]
+    categories?: number[]
+    minPrice?: number
+    maxPrice?: number
+    createdById?: number
+    isPublic?: boolean
+    languageId: string
+  }): Promise<GetProductsResType> {
     const skip = (page - 1) * limit
 
+    const where = {
+      deletedAt: null,
+      createdById: createdById ? createdById : undefined,
+      publishedAt: isPublic ? { lte: new Date(), not: null } : undefined,
+    }
     const [totalItems, data] = await Promise.all([
       this.prismaService.product.count({
-        where: {
-          deletedAt: null,
-        },
+        where,
       }),
       this.prismaService.product.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where,
         include: {
           productTranslations: {
             where: languageId === All_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
@@ -50,11 +73,20 @@ export class ProductRepository {
     }
   }
 
-  async findById(productId: number, languageId: string): Promise<GetProductDetailResType> {
+  async getDetail({
+    productId,
+    languageId,
+    isPublic,
+  }: {
+    productId: number
+    languageId: string
+    isPublic?: boolean
+  }): Promise<GetProductDetailResType> {
     return await this.prismaService.product.findFirst({
       where: {
         id: productId,
         deletedAt: null,
+        publishedAt: isPublic ? { lte: new Date(), not: null } : undefined,
       },
       include: {
         productTranslations: {
@@ -83,19 +115,31 @@ export class ProductRepository {
     })
   }
 
-  async delete(paramsId: number, deletedById: number, hard: boolean): Promise<ProductType> {
+  async findById({ productId }: { productId: number }): Promise<ProductType> {
+    return await this.prismaService.product.findFirst({
+      where: {
+        id: productId,
+        deletedAt: null,
+      },
+    })
+  }
+
+  async delete(paramsId: number, deletedById: number, hard?: boolean): Promise<ProductType> {
     return hard
-      ? await Promise.all([
-          this.prismaService.product.delete({
-            where: { id: paramsId },
-          }),
-          this.prismaService.sKU.deleteMany({
-            where: { productId: paramsId },
-          }),
-        ]).then(([product]) => product)
+      ? await this.prismaService.product.delete({
+          where: { id: paramsId },
+        })
       : await Promise.all([
           this.prismaService.product.update({
             where: { id: paramsId, deletedAt: null },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          }),
+
+          this.prismaService.productTranslation.updateMany({
+            where: { productId: paramsId, deletedAt: null },
             data: {
               deletedAt: new Date(),
               deletedById,

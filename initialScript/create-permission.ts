@@ -6,9 +6,10 @@ import { HTTPsMethod, RoleName } from 'src/shared/constants/role.constant'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from 'src/app.module'
 import { PrismaService } from 'src/shared/services/prisma.service'
+const prisma = new PrismaService()
+const seller_Module = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE']
 
 async function bootstrap() {
-  const prisma = new PrismaService()
   const app = await NestFactory.create(AppModule)
   await app.listen(30010)
   const server = app.getHttpAdapter().getInstance()
@@ -86,26 +87,46 @@ async function bootstrap() {
   } else {
     console.log('No permission to add')
   }
-
   const updatedPermissionInDB = await prisma.permission.findMany({
     where: {
       deletedAt: null,
     },
   })
 
+  const adminPermissinoId = updatedPermissionInDB.map((item) => ({
+    id: item.id,
+  }))
+
+  const sellPermissinoId = updatedPermissionInDB
+    .filter((item) => seller_Module.includes(item.module))
+    .map((item) => ({
+      id: item.id,
+    }))
+  await Promise.all([
+    updateRole(adminPermissinoId, RoleName.Admin).then(() => console.log('Updated Admin role permissions')),
+    updateRole(sellPermissinoId, RoleName.Seller).then(() => console.log('Updated Seller role permissions')),
+  ])
+  await app.close()
+  process.exit(0)
+}
+
+const updateRole = async (permissionId: { id: number }[], roleName: string) => {
+  const role = await prisma.role.findFirstOrThrow({
+    where: {
+      name: roleName,
+      deletedAt: null,
+    },
+  })
+
   await prisma.role.update({
     where: {
-      name: RoleName.Admin,
+      id: role.id,
     },
     data: {
       permissions: {
-        set: updatedPermissionInDB.map((item) => ({
-          id: item.id,
-        })),
+        set: permissionId,
       },
     },
   })
-  await app.close()
-  process.exit(0)
 }
 bootstrap()
