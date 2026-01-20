@@ -39,7 +39,11 @@ export const CreateCategoryBodySchema = CategorySchema.pick({
   name: true,
   logo: true,
   parentCategoryId: true,
-}).strict()
+})
+  .extend({
+    parentCategoryId: z.number().int().positive().optional(),
+  })
+  .strict()
 
 export const UpdateCategoryBodySchema = CreateCategoryBodySchema.partial()
 

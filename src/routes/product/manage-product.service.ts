@@ -30,11 +30,13 @@ export class ManageProductService {
       roleNameRequest: props.roleNameRequest,
       createdById: props.query.createdById,
     })
+
     return await this.productRepository.list({
       page: props.query.page,
       limit: props.query.limit,
-      name: props.query.name,
+      createdById: props.query.createdById,
       languageId: I18nContext.current()?.lang as string,
+      isPublic: props.query.isPublic,
     })
   }
 

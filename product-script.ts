@@ -10,12 +10,12 @@ type SKU = {
 }
 const variants: Variant[] = [
   {
-    value: 'Size',
-    options: ['S', 'M', 'L'],
+    value: 'Dung lượng',
+    options: ['256GB', '512GB', '1TB'],
   },
   {
-    value: 'Color',
-    options: ['Đen', 'Trắng', 'Xám'],
+    value: 'Màu sắc',
+    options: ['Xám Titan', 'Đen Titan'],
   },
 ]
 

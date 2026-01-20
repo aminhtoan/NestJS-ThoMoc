@@ -100,7 +100,7 @@ export const GetProductsQuerySchema = z.object({
 
 // dành cho admin và seller
 export const GetManagerProductsQuerySchema = GetProductsQuerySchema.extend({
-  IsPublic: z.coerce.boolean().optional(),
+  isPublic: z.preprocess((value) => value === 'true', z.boolean()).optional(),
   createdById: z.coerce.number().int().positive(),
 })
 

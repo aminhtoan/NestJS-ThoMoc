@@ -11,6 +11,7 @@ import {
 } from './product.model'
 import { All_LANGUAGE_CODE } from 'src/shared/constants/other.constant'
 import { de } from 'zod/v4/locales'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class ProductRepository {
@@ -40,12 +41,23 @@ export class ProductRepository {
     languageId: string
   }): Promise<GetProductsResType> {
     const skip = (page - 1) * limit
-
-    const where = {
+    let where: Prisma.ProductWhereInput = {
       deletedAt: null,
       createdById: createdById ? createdById : undefined,
-      publishedAt: isPublic ? { lte: new Date(), not: null } : undefined,
     }
+
+    if (isPublic === true) {
+      where.publishedAt = {
+        lte: new Date(),
+        not: null,
+      }
+    } else if (isPublic === false) {
+      where = {
+        ...where,
+        OR: [{ publishedAt: null }, { publishedAt: { gt: new Date() } }],
+      }
+    }
+
     const [totalItems, data] = await Promise.all([
       this.prismaService.product.count({
         where,
@@ -82,12 +94,26 @@ export class ProductRepository {
     languageId: string
     isPublic?: boolean
   }): Promise<GetProductDetailResType> {
+    let where: Prisma.ProductWhereInput = {
+      id: productId,
+      deletedAt: null,
+    }
+
+    if (isPublic === true) {
+      where.publishedAt = {
+        lte: new Date(),
+        not: null,
+      }
+    } else if (isPublic === false) {
+      where = {
+        OR: [
+          { ...where, publishedAt: null },
+          { ...where, publishedAt: { gt: new Date() } },
+        ],
+      }
+    }
     return await this.prismaService.product.findFirst({
-      where: {
-        id: productId,
-        deletedAt: null,
-        publishedAt: isPublic ? { lte: new Date(), not: null } : undefined,
-      },
+      where,
       include: {
         productTranslations: {
           where: languageId === All_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
