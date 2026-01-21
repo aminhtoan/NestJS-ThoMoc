@@ -10,12 +10,18 @@ export class ProductService {
   constructor(private readonly productRepository: ProductRepository) {}
 
   async list(props: { query: GetProductsQueryType }) {
-
     const data = await this.productRepository.list({
       page: props.query.page,
       limit: props.query.limit,
+      createdById: props.query.createdById,
       languageId: I18nContext.current()?.lang as string,
-      isPublic: true,
+      brandIds: props.query.brandIds,
+      categories: props.query.categories,
+      name: props.query.name,
+      minPrice: props.query.minPrice,
+      maxPrice: props.query.maxPrice,
+      orderBy: props.query.orderBy,
+      sortBy: props.query.sortBy,
     })
     return data
   }

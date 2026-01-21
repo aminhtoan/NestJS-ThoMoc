@@ -1,17 +1,14 @@
-import { UpdateBrandBodyDTO } from './../brand/brand.dto'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
+import { All_LANGUAGE_CODE, OrderByType, SortBy, SortByType } from 'src/shared/constants/other.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreateProductBodyType,
   GetProductDetailResType,
-  GetProductsQueryType,
   GetProductsResType,
   ProductType,
   UpdateProductBodyType,
 } from './product.model'
-import { All_LANGUAGE_CODE } from 'src/shared/constants/other.constant'
-import { de } from 'zod/v4/locales'
-import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class ProductRepository {
@@ -28,6 +25,8 @@ export class ProductRepository {
     createdById,
     isPublic,
     languageId,
+    orderBy,
+    sortBy,
   }: {
     page: number
     limit: number
@@ -39,6 +38,8 @@ export class ProductRepository {
     createdById?: number
     isPublic?: boolean
     languageId: string
+    orderBy: OrderByType
+    sortBy: SortByType
   }): Promise<GetProductsResType> {
     const skip = (page - 1) * limit
     let where: Prisma.ProductWhereInput = {
@@ -47,10 +48,26 @@ export class ProductRepository {
       brandId: brandIds && brandIds.length > 0 ? { in: brandIds } : undefined,
       categories: categories && categories.length > 0 ? { some: { id: { in: categories } } } : undefined,
       name: name ? { contains: name, mode: 'insensitive' } : undefined,
-      basePrice: minPrice || maxPrice ? {
-        ...(minPrice ? { gte: minPrice } : {}),
-        ...(maxPrice ? { lte: maxPrice } : {}),
-      } : undefined,
+      basePrice:
+        minPrice || maxPrice
+          ? {
+              ...(minPrice ? { gte: minPrice } : {}),
+              ...(maxPrice ? { lte: maxPrice } : {}),
+            }
+          : undefined,
+    }
+
+    let caculatedOrderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = {
+      createdAt: orderBy,
+    }
+    if (sortBy === SortBy.Price) {
+      caculatedOrderBy = { basePrice: orderBy }
+    } else if (sortBy === SortBy.CreatedAt) {
+      caculatedOrderBy = {
+        orders: {
+          _count: orderBy,
+        },
+      }
     }
 
     if (isPublic === true) {
@@ -75,12 +92,16 @@ export class ProductRepository {
           productTranslations: {
             where: languageId === All_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
           },
+          orders: {
+            where: {
+              deletedAt: null,
+              status: 'DELIVERED',
+            },
+          },
         },
+        orderBy: caculatedOrderBy,
         skip,
         take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
       }),
     ])
     return {
