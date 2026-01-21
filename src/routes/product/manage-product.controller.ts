@@ -30,7 +30,6 @@ export class ManageProductController {
   @Get(':productId')
   @ZodSerializerDto(GetProductDetailResDTO)
   findById(@Param() params: GetProductParamsDTO, @ActiveUser() user: AccessTokenPayLoad) {
-    
     return this.manageProductService.getDetail({
       productId: params.productId,
       userIdRequest: user.userId,

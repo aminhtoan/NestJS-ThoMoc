@@ -44,6 +44,13 @@ export class ProductRepository {
     let where: Prisma.ProductWhereInput = {
       deletedAt: null,
       createdById: createdById ? createdById : undefined,
+      brandId: brandIds && brandIds.length > 0 ? { in: brandIds } : undefined,
+      categories: categories && categories.length > 0 ? { some: { id: { in: categories } } } : undefined,
+      name: name ? { contains: name, mode: 'insensitive' } : undefined,
+      basePrice: minPrice || maxPrice ? {
+        ...(minPrice ? { gte: minPrice } : {}),
+        ...(maxPrice ? { lte: maxPrice } : {}),
+      } : undefined,
     }
 
     if (isPublic === true) {
