@@ -137,6 +137,6 @@ export class UserService {
   }
 
   async findMany({ page, limit }: GetUserQueryType) {
-    return await this.userRepository.findPagination({ page, limit, },I18nContext.current()?.lang)
+    return await this.userRepository.findPagination({ page, limit }, I18nContext.current()?.lang)
   }
 }

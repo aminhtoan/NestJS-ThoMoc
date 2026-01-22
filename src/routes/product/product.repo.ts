@@ -62,7 +62,7 @@ export class ProductRepository {
     }
     if (sortBy === SortBy.Price) {
       caculatedOrderBy = { basePrice: orderBy }
-    } else if (sortBy === SortBy.CreatedAt) {
+    } else if (sortBy === SortBy.Sale) {
       caculatedOrderBy = {
         orders: {
           _count: orderBy,
@@ -140,7 +140,7 @@ export class ProductRepository {
         ],
       }
     }
-    return await this.prismaService.product.findFirst({
+    return await this.prismaService.product.findFirstOrThrow({
       where,
       include: {
         productTranslations: {

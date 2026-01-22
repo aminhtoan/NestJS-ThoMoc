@@ -13,7 +13,7 @@ import {
 export class UserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(body: CreateUserBodyType, updatedById: number): Promise<UserResponseType> {
+  async create(body: CreateUserBodyType, createdById: number): Promise<UserResponseType> {
     return this.prismaService.user.create({
       data: {
         email: body.email,
@@ -22,7 +22,11 @@ export class UserRepository {
         password: body.password,
         roleId: body.roleId,
         status: body.status,
-        updatedById,
+        createdById,
+      },
+      omit: {
+        password: true,
+        totpSecret: true,
       },
     })
   }

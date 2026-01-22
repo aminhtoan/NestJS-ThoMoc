@@ -16,7 +16,7 @@ export class ProductController {
   }
 
   @Get(':productId')
-  @ZodSerializerDto(GetProductDetailResDTO)
+  // @ZodSerializerDto(GetProductDetailResDTO)
   findById(@Param() params: GetProductParamsDTO) {
     return this.productService.getDetail({ productId: params.productId })
   }

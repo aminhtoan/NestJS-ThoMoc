@@ -38,7 +38,6 @@ export const UpdateUserBodySchema = CreateUserBodySchema.partial()
 export const UserResponseSchema = UserSchema.omit({
   password: true,
   totpSecret: true,
-  deletedAt: true,
 })
 // .extend({
 //   userTranslations: z.array(UserTranslationSchema).optional(),

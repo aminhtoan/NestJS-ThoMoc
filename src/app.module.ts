@@ -20,6 +20,7 @@ import { BrandModule } from './routes/brand/brand.module'
 import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
 import { CategoryModule } from './routes/category/category.module';
 import { ProductModule } from './routes/product/product.module';
+import { CartModule } from './routes/cart/cart.module';
 import * as path from 'path'
 
 @Module({
@@ -53,6 +54,7 @@ import * as path from 'path'
     BrandModule,
     CategoryModule,
     ProductModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [

@@ -7,8 +7,9 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from 'src/app.module'
 import { PrismaService } from 'src/shared/services/prisma.service'
 const prisma = new PrismaService()
-const seller_Module = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE']
 
+const seller_Module = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE', 'CART']
+const client_Moudle = ['AUTH', 'MEDIA', 'CART', 'PROFILE']
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   await app.listen(30010)
@@ -102,9 +103,16 @@ async function bootstrap() {
     .map((item) => ({
       id: item.id,
     }))
+
+  const clientPermissinoId = updatedPermissionInDB
+    .filter((item) => client_Moudle.includes(item.module))
+    .map((item) => ({
+      id: item.id,
+    }))
   await Promise.all([
-    updateRole(adminPermissinoId, RoleName.Admin).then(() => console.log('Updated Admin role permissions')),
-    updateRole(sellPermissinoId, RoleName.Seller).then(() => console.log('Updated Seller role permissions')),
+    updateRole(adminPermissinoId, RoleName.Admin),
+    updateRole(sellPermissinoId, RoleName.Seller),
+    updateRole(clientPermissinoId, RoleName.Client),
   ])
   await app.close()
   process.exit(0)

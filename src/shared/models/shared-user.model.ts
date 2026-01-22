@@ -3,7 +3,7 @@ import z from 'zod'
 import { TypeofVerificationCode, UserStatus } from '../constants/auth.constant'
 import { REGEX } from '../constants/regex.constant'
 
-const UserSchema = z.object({
+export const UserSchema = z.object({
   id: z.number(),
   email: z.string().regex(REGEX.email, 'Email không hợp lệ'),
   name: z.string().min(3, 'Tên phải có ít nhất 3 ký tự').regex(REGEX.name, 'Tên chỉ bao gồm chữ cái và khoảng trắng'),

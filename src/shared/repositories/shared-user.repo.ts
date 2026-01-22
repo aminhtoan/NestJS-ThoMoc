@@ -8,7 +8,7 @@ export class SharedUserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async findUnique(uniqueObject: { email: string } | { id: number }): Promise<UserWithRoleType | null> {
-    return this.prismaService.user.findUniqueOrThrow({
+    return this.prismaService.user.findUnique({
       where: uniqueObject,
       include: {
         role: {
