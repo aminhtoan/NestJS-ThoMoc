@@ -9,8 +9,8 @@ export const CartItemSchema = z.object({
   quantity: z.number().int().positive(),
   skuId: z.number(),
   userId: z.number(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 })
 export const GetCartItemParamsSchema = z.object({
   cartItemId: z.coerce.number().int().positive(),
@@ -27,8 +27,31 @@ export const CartItemDetailSchema = z.object({
     CartItemSchema.extend({
       sku: SKUSchema.extend({
         product: ProductSchema.extend({
-          productTranslations: z.array(ProductTranslationSchema),
+          productTranslations: z.array(
+            ProductTranslationSchema.omit({
+              createdAt: true,
+              updatedAt: true,
+              deletedAt: true,
+              createdById: true,
+              updatedById: true,
+              deletedById: true,
+            }),
+          ),
+        }).omit({
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+          createdById: true,
+          updatedById: true,
+          deletedById: true,
         }),
+      }).omit({
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+        createdById: true,
+        updatedById: true,
+        deletedById: true,
       }),
     }),
   ),

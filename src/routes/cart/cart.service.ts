@@ -9,7 +9,7 @@ export class CartService {
   constructor(private readonly cartRepository: CartRepository) {}
 
   async list(userId: number, page: number, limit: number) {
-    return await this.cartRepository.list({ userId, languageId: I18nContext.current()?.lang, page, limit })
+    return await this.cartRepository.list2({ userId, languageId: I18nContext.current()?.lang, page, limit })
   }
 
   async create(body: AddToCartBodyType, userId: number) {
