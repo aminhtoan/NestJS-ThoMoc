@@ -21,6 +21,7 @@ import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } fro
 import { CategoryModule } from './routes/category/category.module';
 import { ProductModule } from './routes/product/product.module';
 import { CartModule } from './routes/cart/cart.module';
+import { OrderModule } from './routes/order/order.module';
 import * as path from 'path'
 
 @Module({
@@ -55,6 +56,7 @@ import * as path from 'path'
     CategoryModule,
     ProductModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [

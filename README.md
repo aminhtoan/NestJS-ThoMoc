@@ -46,7 +46,7 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
    npm run init-seed-data
    ```
 
-7. Chạy development:
+7. Chạy development: 
    ```bash
    npm run start:dev
    ```
