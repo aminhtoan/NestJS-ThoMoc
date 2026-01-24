@@ -3,10 +3,13 @@ import * as OTPAuth from 'otpauth'
 import envConfig from 'src/shared/config'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import type { RedisClientType } from 'redis'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache } from 'cache-manager'
 
 @Injectable()
 export class TwoFactorAuthService {
-  constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClientType) {}
+  // nject(REDIS_CLIENT) private readonly redis: RedisClientType
+  constructor(@Inject(CACHE_MANAGER) private readonly redis: Cache) {}
   private createTOTP(email: string, secret?: string) {
     return new OTPAuth.TOTP({
       issuer: envConfig.APP_NAME,
@@ -42,7 +45,7 @@ export class TwoFactorAuthService {
     }
 
     let delta = totp.validate({ token, window: 1 })
-    await this.redis.set(`2fa:used:${email}:${token}`, '1', { EX: 30 })
+    await this.redis.set(`2fa:used:${email}:${token}`, '1', 30000)
 
     return delta !== null
   }

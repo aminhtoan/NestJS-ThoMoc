@@ -20,7 +20,7 @@ const sharedServices = [
   TokenService,
   SharedUserRepository,
   SendEmail,
-  RedisServices,
+  // RedisServices,
   SharedPermissionRepository,
   SharedRolesRepo,
   CloudinaryService,

@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Inject,
-  Ip,
-  Post,
-  Query,
-  Res
-} from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Ip, Post, Query, Res } from '@nestjs/common'
 import type { Response } from 'express'
 import { ZodSerializerDto } from 'nestjs-zod'
 import type { RedisClientType } from 'redis'
@@ -40,13 +29,15 @@ import {
 import { AuthService } from './services/auth.service'
 import { FacebookService } from './services/facebook.service'
 import { GoogleService } from './services/google.service'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache } from 'cache-manager'
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService,
-    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
+    @Inject(CACHE_MANAGER) private readonly redis: Cache,
     private readonly facebookService: FacebookService,
   ) {}
 

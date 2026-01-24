@@ -33,6 +33,8 @@ import {
 import { AuthRespository } from '../repository/auth.repo'
 import { TwoFactorAuthService } from './two-factor.service'
 import { SharedRolesRepo } from 'src/shared/repositories/shared-roles.repo'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache } from 'cache-manager'
 
 interface CreateUserInput {
   name: string
@@ -52,7 +54,7 @@ export class AuthService {
     private readonly sendEmail: SendEmail,
     private readonly tokenService: TokenService,
     private readonly twoFactorAuthService: TwoFactorAuthService,
-    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
+    @Inject(CACHE_MANAGER) private readonly redis: Cache,
   ) {}
 
   async validateVerificationCode({
@@ -227,9 +229,7 @@ export class AuthService {
 
     const tempToken = crypto.randomUUID()
 
-    await this.redis.set(`login-temp:${tempToken}`, JSON.stringify({ userId: user.id }), {
-      EX: 300,
-    })
+    await this.redis.set(`login-temp:${tempToken}`, JSON.stringify({ userId: user.id }), 300_000)
 
     return {
       needOTP: !user.totpSecret,
@@ -494,14 +494,11 @@ export class AuthService {
       await this.redis.set(
         `${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${tempToken}`,
         JSON.stringify({ userId: existedEmail.id }),
-        {
-          EX: 300,
-        },
+        300_000,
       )
 
       // lưu session theo userId
-      await this.redis.set(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`, tempToken, { EX: 300 })
-
+      await this.redis.set(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`, tempToken, 300)
       return {
         tempToken,
       }
