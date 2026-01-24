@@ -14,4 +14,14 @@ export class OrderService {
     const res = await this.OrderRepository.create(userId, body)
     return res
   }
+
+  async getDetail(userId: number, orderId: number) {
+    const res = await this.OrderRepository.findDetailOrder(userId, orderId)
+    return res
+  }
+
+  async cancelOrder(userId: number, orderId: number) {
+    const res = await this.OrderRepository.cancelOrder(userId, orderId)
+    return res
+  }
 }
