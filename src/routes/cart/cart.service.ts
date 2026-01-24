@@ -23,9 +23,9 @@ export class CartService {
     }
   }
 
-  async update(body: UpdateCartItemBodyType, cartItemId: number) {
+  async update(body: UpdateCartItemBodyType, cartItemId: number, userId: number) {
     try {
-      return await this.cartRepository.update(body, cartItemId)
+      return await this.cartRepository.update(body, cartItemId, userId)
     } catch (error) {
       if (isRecordNotFoundError(error)) {
         throw new NotFoundException('Cart item không tồn tại')

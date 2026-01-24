@@ -18,7 +18,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  // @ZodSerializerDto(GetOrderListResDTO)
+  @ZodSerializerDto(GetOrderListResDTO)
   list(@ActiveUser('userId') userId: number, @Query() query: GetOrderQueryDTO) {
     return this.orderService.list(userId, query)
   }
@@ -30,7 +30,7 @@ export class OrderController {
   }
 
   @Get('detail/:orderId')
-  // @ZodSerializerDto(GetOrderDetailResDTO)
+  @ZodSerializerDto(GetOrderDetailResDTO)
   getDetail(@ActiveUser('userId') userId: number, @Param() params: GetOrderParamsDTO) {
     return this.orderService.getDetail(userId, params.orderId)
   }
@@ -40,6 +40,4 @@ export class OrderController {
   deleteOrder(@ActiveUser('userId') userId: number, @Param() params: GetOrderParamsDTO) {
     return this.orderService.cancelOrder(userId, params.orderId)
   }
-
-
 }
