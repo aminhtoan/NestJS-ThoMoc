@@ -13,6 +13,8 @@ import { RedisServices } from './services/redis.service'
 import { SharedPermissionRepository } from './repositories/shared-permission.repo'
 import { SharedRolesRepo } from './repositories/shared-roles.repo'
 import { CloudinaryService } from './services/cloudinary.service'
+import { PaymentConsumer } from './consumer/payment.consumer'
+import { SharedPaymentRepo } from './repositories/shared-payment.repo'
 
 const sharedServices = [
   PrismaService,
@@ -24,6 +26,7 @@ const sharedServices = [
   SharedPermissionRepository,
   SharedRolesRepo,
   CloudinaryService,
+  SharedPaymentRepo
 ]
 
 @Global()
@@ -31,6 +34,8 @@ const sharedServices = [
   providers: [
     ...sharedServices,
     AccessTokenGuard,
+    PaymentConsumer,
+
     APIKeyGuard,
     {
       provide: APP_GUARD,

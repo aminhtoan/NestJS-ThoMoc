@@ -161,6 +161,7 @@ export class OrderRepository {
               payment: {
                 create: { status: PaymentStatus.PENDING },
               },
+
               items: {
                 create: item.cartItemIds.map((cartItemId) => {
                   const cartItem = cartItemMap.get(cartItemId)
@@ -189,6 +190,7 @@ export class OrderRepository {
                 }),
               },
             },
+            include: { payment: true },
           }),
         ),
       )
