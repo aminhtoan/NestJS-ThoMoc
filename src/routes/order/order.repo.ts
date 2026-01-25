@@ -44,8 +44,16 @@ export class OrderRepository {
         include: {
           items: true,
         },
+        omit: {
+          receiver: true,
+          deletedAt: true,
+          // deletedById: true,
+          // createdById: true,
+          // updatedById: true,
+        },
       }),
     ])
+
     return {
       page,
       limit,
@@ -207,7 +215,6 @@ export class OrderRepository {
         items: true,
       },
     })
-
     if (!order) {
       throw new BadRequestException('Không tìm thấy đơn hàng')
     }

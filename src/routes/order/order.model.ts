@@ -52,12 +52,10 @@ export const GetOrderListSchema = z.object({
   data: z.array(
     OrderSchema.extend({
       items: z.array(ProductSKUSnapshotSchema),
+      paymentId: z.number().optional(),
     }).omit({
       receiver: true,
       deletedAt: true,
-      deletedById: true,
-      createdById: true,
-      updatedById: true,
     }),
   ),
 })

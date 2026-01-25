@@ -24,6 +24,7 @@ import { CartModule } from './routes/cart/cart.module'
 import { OrderModule } from './routes/order/order.module'
 import * as path from 'path'
 import { CacheModule } from '@nestjs/cache-manager'
+import { PaymentModule } from './routes/payment/payment.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { CacheModule } from '@nestjs/cache-manager'
     ProductModule,
     CartModule,
     OrderModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
