@@ -30,7 +30,7 @@ import envConfig from './shared/config'
 
 @Module({
   imports: [
-    CacheModule.register({ isGlobal: true }),
+    // CacheModule.register({ isGlobal: true }),
     BullModule.forRoot({
       connection: {
         // host: 'localhost',
@@ -39,6 +39,8 @@ import envConfig from './shared/config'
         port: envConfig.REDIS_PORT,
         username: envConfig.REDIS_USERNAME,
         password: envConfig.REDIS_PASSWORD,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
       },
     }),
     I18nModule.forRoot({

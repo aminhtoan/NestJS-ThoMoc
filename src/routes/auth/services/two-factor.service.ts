@@ -8,8 +8,9 @@ import { Cache } from 'cache-manager'
 
 @Injectable()
 export class TwoFactorAuthService {
-  // nject(REDIS_CLIENT) private readonly redis: RedisClientType
-  constructor(@Inject(CACHE_MANAGER) private readonly redis: Cache) {}
+  // @Inject(CACHE_MANAGER) private readonly redis: Cache
+
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: RedisClientType) {}
   private createTOTP(email: string, secret?: string) {
     return new OTPAuth.TOTP({
       issuer: envConfig.APP_NAME,
@@ -45,7 +46,7 @@ export class TwoFactorAuthService {
     }
 
     let delta = totp.validate({ token, window: 1 })
-    await this.redis.set(`2fa:used:${email}:${token}`, '1', 30000)
+    await this.redis.set(`2fa:used:${email}:${token}`, '1', { EX: 30 })
 
     return delta !== null
   }

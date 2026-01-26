@@ -37,7 +37,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly googleService: GoogleService,
-    @Inject(CACHE_MANAGER) private readonly redis: Cache,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
     private readonly facebookService: FacebookService,
   ) {}
 

@@ -54,7 +54,7 @@ export class AuthService {
     private readonly sendEmail: SendEmail,
     private readonly tokenService: TokenService,
     private readonly twoFactorAuthService: TwoFactorAuthService,
-    @Inject(CACHE_MANAGER) private readonly redis: Cache,
+    @Inject(REDIS_CLIENT) private readonly redis: RedisClientType,
   ) {}
 
   async validateVerificationCode({
@@ -229,7 +229,7 @@ export class AuthService {
 
     const tempToken = crypto.randomUUID()
 
-    await this.redis.set(`login-temp:${tempToken}`, JSON.stringify({ userId: user.id }), 300_000)
+    await this.redis.set(`login-temp:${tempToken}`, JSON.stringify({ userId: user.id }), { EX: 300 })
 
     return {
       needOTP: !user.totpSecret,
@@ -494,11 +494,11 @@ export class AuthService {
       await this.redis.set(
         `${TypeTempRedis.FORGOT_PASSWORD_TEMP}:${tempToken}`,
         JSON.stringify({ userId: existedEmail.id }),
-        300_000,
+        { EX: 300 },
       )
 
       // lưu session theo userId
-      await this.redis.set(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`, tempToken, 300)
+      await this.redis.set(`${TypeTempRedis.FORGOT_PASSWORD_USER}:${userId}`, tempToken, { EX: 300 })
       return {
         tempToken,
       }

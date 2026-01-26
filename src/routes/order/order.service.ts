@@ -17,12 +17,13 @@ export class OrderService {
   async create(userId: number, body: CreateOrderBodyType) {
     const orders = await this.OrderRepository.create(userId, body)
     await Promise.all(
-      orders.data.map((order) => {
-        // Kiểm tra chắc chắn có payment thì mới gọi queue
-        if (order.paymentId) {
-          return this.orderProducer.canclePayment(order.paymentId.toString())
-        }
-      }),
+      orders.data
+        .filter((o) => o.paymentId)
+        .map((o) =>
+          this.orderProducer.removeCancelPaymentJob(o.paymentId.toString()).catch((err) => {
+            console.error(`Failed to add cancel-payment job, paymentId=${o.paymentId}`, err)
+          }),
+        ),
     )
 
     return orders

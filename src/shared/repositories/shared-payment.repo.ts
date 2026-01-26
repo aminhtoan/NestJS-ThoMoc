@@ -8,7 +8,7 @@ export class SharedPaymentRepo {
   constructor(private readonly prismaService: PrismaService) {}
 
   async celcelPaymentWithOrder(paymentId: number) {
-    const payment = await this.prismaService.payment.findUnique({
+   const payment = await this.prismaService.payment.findUnique({
       where: { id: paymentId },
       select: {
         id: true,

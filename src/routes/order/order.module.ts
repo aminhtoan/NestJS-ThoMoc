@@ -5,7 +5,6 @@ import { OrderRepository } from './order.repo'
 import { BullModule } from '@nestjs/bullmq'
 import { PAYMENT_queue_name } from 'src/shared/constants/payment.constant'
 import { OrderProducer } from './order.producer'
-import { RedisConfigService } from 'src/shared/services/redis-config.service'
 
 @Module({
   imports: [
@@ -14,7 +13,7 @@ import { RedisConfigService } from 'src/shared/services/redis-config.service'
     }),
   ],
   controllers: [OrderController],
-
-  providers: [OrderService, OrderRepository, OrderProducer, RedisConfigService],
+  exports: [OrderProducer],
+  providers: [OrderService, OrderRepository, OrderProducer],
 })
 export class OrderModule {}

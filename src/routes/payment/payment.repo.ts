@@ -8,12 +8,13 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 import { WebhookPaymentType } from './payment.model'
 import { Prisma } from '@prisma/client'
 import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
+import { OrderProducer } from '../order/order.producer'
 
 @Injectable()
 export class PaymentStatusRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async receiver(body: WebhookPaymentType): Promise<MessageType> {
+  async receiver(body: WebhookPaymentType): Promise<{ paymentId?: number; message: string }> {
     let amount_in = 0
     let amount_out = 0
 
@@ -106,7 +107,9 @@ export class PaymentStatusRepository {
         data: { status: ORDER_STATUS.PENDING_PICKUP },
       })
     })
+
     return {
+      paymentId,
       message: 'Thanh toán thành công',
     }
   }

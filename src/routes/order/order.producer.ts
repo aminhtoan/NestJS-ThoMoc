@@ -21,10 +21,18 @@ export class OrderProducer {
           type: 'exponential', // Kiểu lùi theo hàm mũ
           delay: 5000, // Bắt đầu chờ 5s (5s -> 10s -> 20s -> 40s -> 80s)
         },
-        jobId: `cancle-payment-${paymentId}`, // unique id de tranh trung lap
+        jobId: `cancel-payment-${paymentId}`, // unique id de tranh trung lap
         removeOnComplete: true,
         removeOnFail: false,
       },
     )
+  }
+
+  async removeCancelPaymentJob(paymentId: string) {
+    const jobId = `cancel-payment-${paymentId}`
+    const job = await this.audioQueue.getJob(jobId)
+    if (job) {
+      await job.remove()
+    }
   }
 }
