@@ -46,6 +46,7 @@ const configSchema = z.object({
   NGROK_AUTH_TOKEN: z.string().optional(),
   SO_TAI_KHOAN: z.string(),
   NGAN_HANG: z.string(),
+  WS_PORT: z.coerce.number().optional(),
 })
 
 const configServer = configSchema.safeParse(process.env)

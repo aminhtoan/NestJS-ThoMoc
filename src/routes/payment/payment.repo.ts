@@ -14,7 +14,7 @@ import { OrderProducer } from '../order/order.producer'
 export class PaymentStatusRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async receiver(body: WebhookPaymentType): Promise<{ paymentId?: number; message: string }> {
+  async receiver(body: WebhookPaymentType): Promise<{ userId?: number; paymentId?: number; message: string }> {
     let amount_in = 0
     let amount_out = 0
 
@@ -107,8 +107,9 @@ export class PaymentStatusRepository {
         data: { status: ORDER_STATUS.PENDING_PICKUP },
       })
     })
-
+    const buyerId = payment.orders[0]?.userId
     return {
+      userId: buyerId,
       paymentId,
       message: 'Thanh toán thành công',
     }

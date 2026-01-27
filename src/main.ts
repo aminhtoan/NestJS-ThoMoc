@@ -2,13 +2,14 @@ import envConfig from 'src/shared/config'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
+import { WebsocketAdapter } from './websockets/websocket.adapter'
 const ngrok = require('ngrok')
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
   app.setGlobalPrefix('api')
-
+  app.useWebSocketAdapter(new WebsocketAdapter(app))
   // const config = new DocumentBuilder()
   //   .setTitle('NestJS E-commerce')
   //   .setDescription('The E-commerce API description')

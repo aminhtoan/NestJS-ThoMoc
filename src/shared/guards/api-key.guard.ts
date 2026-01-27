@@ -5,7 +5,7 @@ import envConfig from '../config'
 export class APIKeyGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
-    const xAPIKey = request.headers['x-api-key']
+    const xAPIKey = request.headers['authorization']?.split(' ')[1]
 
     if (!xAPIKey) {
       throw new UnauthorizedException('Thiếu API key trong header')
