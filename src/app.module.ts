@@ -26,6 +26,7 @@ import * as path from 'path'
 import { CacheModule } from '@nestjs/cache-manager'
 import { PaymentModule } from './routes/payment/payment.module'
 import { BullModule } from '@nestjs/bullmq'
+import { WebsocketsModule } from './websockets/websockets.module';
 import envConfig from './shared/config'
 
 @Module({
@@ -75,6 +76,7 @@ import envConfig from './shared/config'
     CartModule,
     OrderModule,
     PaymentModule,
+    WebsocketsModule,
   ],
   controllers: [AppController],
   providers: [
