@@ -27,6 +27,7 @@ import { CacheModule } from '@nestjs/cache-manager'
 import { PaymentModule } from './routes/payment/payment.module'
 import { BullModule } from '@nestjs/bullmq'
 import { WebsocketsModule } from './websockets/websockets.module';
+import { ReviewModule } from './routes/review/review.module';
 import envConfig from './shared/config'
 
 @Module({
@@ -77,6 +78,7 @@ import envConfig from './shared/config'
     OrderModule,
     PaymentModule,
     WebsocketsModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [
