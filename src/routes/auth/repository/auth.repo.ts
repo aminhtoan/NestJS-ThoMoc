@@ -8,7 +8,7 @@ import {
   ResgisterBodyType,
   RoleType,
   UserType,
-  VerificationCodeType
+  VerificationCodeType,
 } from '../models/auth.model'
 
 @Injectable()

@@ -29,4 +29,10 @@ export class PaymentService {
       message: data.message,
     }
   }
+
+  async createQR(amount: number, description: string) {
+    //description ờ đây là gì? là mã payment code và số paymentId, TJOXO + 12 => TJOXO12
+    const qr = `https://qr.sepay.vn/img?acc=0932682977&bank=MBBank&amount=${amount}&des=${description}`
+    return qr
+  }
 }

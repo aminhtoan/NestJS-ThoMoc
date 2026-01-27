@@ -72,6 +72,7 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
     ```bash
     nest g resource [name] --no-spec
     ```
+ngrok http 8888
 ## Hướng dẫn tạo credentials cho Social Login
 
 ### 1. Login với Google
@@ -96,4 +97,3 @@ Backend API cho hệ thống thương mại điện tử ThoMoc (E-commerce).
 Project đang trong quá trình phát triển.  
 Có góp ý hoặc muốn đóng góp thì cứ mở Issue hoặc Push PR nhé! 🚀
 ```
-

@@ -22,8 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "email:dev": "email dev",
     "email:build": "email build",
-    "email:export": "email export",
-    "postinstall": "prisma generate"
+    "email:export": "email export"
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",
@@ -72,7 +71,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
+    "@nestjs/cli": "^11.0.16",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@types/bcrypt": "^6.0.0",
@@ -88,6 +87,7 @@
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
     "jest": "^30.0.0",
+    "ngrok": "^5.0.0-beta.2",
     "prettier": "^3.4.2",
     "prisma": "^7.2.0",
     "react-email": "4.3.2",

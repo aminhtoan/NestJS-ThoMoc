@@ -43,6 +43,9 @@ const configSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string(),
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
+  NGROK_AUTH_TOKEN: z.string().optional(),
+  SO_TAI_KHOAN: z.string(),
+  NGAN_HANG: z.string(),
 })
 
 const configServer = configSchema.safeParse(process.env)

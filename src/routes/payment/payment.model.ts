@@ -46,6 +46,5 @@ export const WebhookPaymentSchema = z.object({
   description: z.string().nullable().optional(),
 })
 
-
 export type PaymentTransactionType = z.infer<typeof PaymentTransactionSchema>
 export type WebhookPaymentType = z.infer<typeof WebhookPaymentSchema>

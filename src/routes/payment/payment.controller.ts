@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Get, Post } from '@nestjs/common'
 import { PaymentService } from './payment.service'
 import { WebhookPaymentDTO } from './payment.dto'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -14,5 +14,12 @@ export class PaymentController {
   @ZodSerializerDto(MessageResDto)
   async handleWebhook(@Body() body: WebhookPaymentDTO) {
     return this.paymentService.receiver(body)
+  }
+
+  @Post('qr')
+  @Auth(['ApiKey'])
+  @ZodSerializerDto(MessageResDto)
+  async createQR(@Body() body: { amount: number; description: string }) {
+    return this.paymentService.createQR(body.amount, body.description)
   }
 }
