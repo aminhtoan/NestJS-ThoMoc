@@ -25,3 +25,7 @@ export const generateRandomFileName = (fileName: string): string => {
   const ext = path.extname(fileName)
   return `${uuidv4()}${ext}`
 }
+
+export const generateRoom = (userId: number) => {
+  return `room-${userId}`
+}

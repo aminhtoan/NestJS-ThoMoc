@@ -5,6 +5,7 @@ import { WebhookPaymentType } from './payment.model'
 import { OrderProducer } from '../order/order.producer'
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 import { Server } from 'socket.io'
+import { generateRoom } from 'src/shared/helpers'
 
 @Injectable()
 @WebSocketGateway({ namespace: '/payment' })
@@ -19,6 +20,10 @@ export class PaymentService {
   async receiver(body: WebhookPaymentType) {
     const data = await this.paymentStatusRepository.receiver(body)
 
+    this.server.to(generateRoom(data.userId)).emit('payment', {
+      status: 'success',
+    })
+
     if (!data.paymentId) {
       return {
         message: data.message,
@@ -30,17 +35,15 @@ export class PaymentService {
     } catch (err) {
       console.error(`Failed to remove cancel-payment job, paymentId=${data.paymentId}`, err)
     }
-
-    try {
-      const websocket = await this.websocketsRepo.findWebsocket(data.userId)
-      websocket.forEach((ws) => {
-        this.server.to(ws.id).emit('payment', {
-          status: 'success',
-        })
-      })
-    } catch (error) {
-      console.error(error)
-    }
+    //   const websocket = await this.websocketsRepo.findWebsocket(data.userId)
+    //   websocket.forEach((ws) => {
+    //     this.server.to(ws.id).emit('payment', {
+    //       status: 'success',
+    //     })
+    //   })
+    // } catch (error) {
+    //   console.error(error)
+    // }
     return {
       message: data.message,
     }
