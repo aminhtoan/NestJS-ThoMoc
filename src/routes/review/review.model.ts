@@ -1,4 +1,5 @@
 import { ProductSchema } from 'src/shared/models/shared-product.model'
+import { UserSchema } from 'src/shared/models/shared-user.model'
 import z from 'zod'
 
 export const ReviewSchema = z.object({
@@ -19,7 +20,6 @@ export const ReviewMediaSchema = z.object({
   url: z.string(),
   type: z.enum(['IMAGE', 'VIDEO']),
   createdAt: z.date(),
-  updatedAt: z.date(),
 })
 
 export const createReviewBodySchema = ReviewSchema.pick({
@@ -34,6 +34,10 @@ export const createReviewBodySchema = ReviewSchema.pick({
       type: true,
     }),
   ),
+})
+
+export const createReviewResSchema = ReviewSchema.extend({
+  medias: z.array(ReviewMediaSchema),
 })
 
 export const updateReviewBodySchema = z
@@ -74,15 +78,13 @@ export const ReviewMediaListSchema = ReviewMediaSchema.pick({
   url: true,
 })
 
-export const ReviewListItemSchema = ReviewSchema.pick({
-  id: true,
-  content: true,
-  rating: true,
-  userId: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
+export const ReviewListItemSchema = ReviewSchema.extend({
   medias: z.array(ReviewMediaListSchema),
+  user: UserSchema.pick({
+    id: true,
+    name: true,
+    avatar: true,
+  }),
 })
 
 export const GetReviewQuerySchema = z
@@ -91,7 +93,7 @@ export const GetReviewQuerySchema = z
     limit: z.coerce.number().int().positive().default(10),
   })
   .strict()
-  
+
 export const GetReviewResSchema = z.object({
   data: z.array(ReviewListItemSchema),
   page: z.number(),
@@ -120,3 +122,4 @@ export type createReviewBody = z.infer<typeof createReviewBodySchema>
 export type updateReviewBody = z.infer<typeof updateReviewBodySchema>
 export type GetReviewDetailParams = z.infer<typeof GetReviewDetailParamsSchema>
 export type GetReviewsParams = z.infer<typeof GetReviewsParamsSchema>
+export type createReviewResType = z.infer<typeof createReviewResSchema>

@@ -9,6 +9,7 @@ import {
   GetReviewResSchema,
   GetDetailReviewSchema,
   GetReviewQuerySchema,
+  createReviewResSchema,
 } from './review.model'
 
 export class ReviewDto extends createZodDto(ReviewSchema) {}
@@ -27,3 +28,6 @@ export class ReviewListResponseDto extends createZodDto(GetReviewResSchema) {}
 export class ReviewDetailResponseDto extends createZodDto(GetDetailReviewSchema) {}
 
 export class GetReviewQueryDTO extends createZodDto(GetReviewQuerySchema) {}
+
+
+export class GetReviewDetailDTO extends createZodDto(createReviewResSchema) {}
