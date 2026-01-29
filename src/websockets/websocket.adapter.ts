@@ -35,7 +35,7 @@ export class WebsocketAdapter extends IoAdapter {
     const server: Server = super.createIOServer(portToUse, {
       ...options,
       cors: {
-        origin: 'http://localhost:3000',
+        origin: '*',
         credentials: true,
       },
       transports: ['websocket', 'polling'],

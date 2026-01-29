@@ -16,6 +16,7 @@ import { CloudinaryService } from './services/cloudinary.service'
 import { PaymentConsumer } from './consumer/payment.consumer'
 import { SharedPaymentRepo } from './repositories/shared-payment.repo'
 import { WebsocketsRepo } from './repositories/shared-websocket.repo'
+import { MessageRespository } from './repositories/shared-message.repo'
 
 const sharedServices = [
   PrismaService,
@@ -29,6 +30,7 @@ const sharedServices = [
   CloudinaryService,
   SharedPaymentRepo,
   WebsocketsRepo,
+  MessageRespository,
 ]
 
 @Global()

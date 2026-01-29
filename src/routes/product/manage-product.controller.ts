@@ -24,7 +24,6 @@ export class ManageProductController {
   @Get()
   @ZodSerializerDto(GetProductsResDTO)
   list(@Query() query: GetManagerProductsQueryDTO, @ActiveUser() user: AccessTokenPayLoad) {
-    console.log(query)
     return this.manageProductService.getProducts({ query, userIdRequest: user.userId, roleNameRequest: user.roleName })
   }
 
