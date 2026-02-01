@@ -697,4 +697,12 @@ export class AuthService {
       throw error
     }
   }
+
+  async getProfile(userId: number) {
+    const user = await this.authRespository.omitUserSensitiveInfo(userId)
+    if (!user) {
+      throw new UnauthorizedException('User not found')
+    }
+    return user
+  }
 }

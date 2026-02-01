@@ -156,4 +156,17 @@ export class AuthRespository {
       },
     })
   }
+
+  // loại bỏ pass và totpSecret khi trả về
+  async omitUserSensitiveInfo(userId: number): Promise<Omit<UserType, 'password' | 'totpSecret'>> {
+    return this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+      omit: {
+        password: true,
+        totpSecret: true,
+      },
+    })
+  }
 }

@@ -39,7 +39,7 @@ model User {
   name        String @db.VarChar(500)
   password    String @db.VarChar(500)
   phoneNumber String @db.VarChar(50)
-  avatar      String @default("/public/images/default-avatar.png") @db.VarChar(1000)
+  avatar      String @default("/images/default-avatar.png") @db.VarChar(1000)
 
   // Này có thể dùng để thực hiện chức năng quên mật khẩu, đăng nhập 2 bước
   totpSecret                  String?               @db.VarChar(1000)

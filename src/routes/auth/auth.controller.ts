@@ -167,4 +167,9 @@ export class AuthController {
       return res.redirect(`${envConfig.FACEBOOK_CLIENT_REDIRECT_URI}?errorsMessage=${message}`)
     }
   }
+
+  @Get('me')
+  getProfile(@ActiveUser('userId') userId: number) {
+    return this.authService.getProfile(userId)
+  }
 }

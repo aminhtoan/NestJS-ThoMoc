@@ -120,4 +120,14 @@ export class MediaController {
       throw new Error('Failed to upload image')
     }
   }
+
+  // lấy default_avatar trong  /public/images
+  @Get('default-avatar')
+  @IsPublic()
+  async getDefaultAvatar(@Res() res: Response) {
+    const filePath = path.resolve('public/images/default-avatar.png')
+    res.sendFile(filePath)
+    
+    return filePath
+  }
 }
