@@ -12,6 +12,7 @@ import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import {
   DisableTwoFactorBodyDTO,
   ForgotPasswordBodyDTO,
+  GetAuthMeResDTO,
   GetAuthorizationUrlResDTO,
   LoginBodyDTO,
   LoginResDTO,
@@ -29,8 +30,8 @@ import {
 import { AuthService } from './services/auth.service'
 import { FacebookService } from './services/facebook.service'
 import { GoogleService } from './services/google.service'
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Cache } from 'cache-manager'
+// import { CACHE_MANAGER } from '@nestjs/cache-manager'
+// import { Cache } from 'cache-manager'
 
 @Controller('auth')
 export class AuthController {
@@ -41,12 +42,18 @@ export class AuthController {
     private readonly facebookService: FacebookService,
   ) {}
 
-  // is public là chọn type là none còn ko thì là bear có cung cấp accesstoke của file này AuthenticationGuard
   @IsPublic()
   @Post('register')
   @ZodSerializerDto(RegisterResDTO)
   register(@Body() body: RegisterBodyDTO) {
     return this.authService.register(body)
+  }
+
+  @IsPublic()
+  @Post('/otp/verify')
+  @ZodSerializerDto(MessageResDto)
+  registerVerify(@Body() body: { email: string; code: string }) {
+    return this.authService.registerVerify(body)
   }
 
   @IsPublic()
@@ -58,14 +65,12 @@ export class AuthController {
 
   @IsPublic()
   @Post('login')
-  // @Throttle({ default: { limit: 5, ttl: 6000 } })
   loginCheck(@Body() body: VerifyLoginBodyDTO) {
     return this.authService.loginCheck(body)
   }
 
   @IsPublic()
   @Post('login/verify')
-  // @Throttle({ default: { limit: 5, ttl: 6000 } })
   @ZodSerializerDto(LoginResDTO)
   login(@Body() body: LoginBodyDTO, @Ip() ip: string, @UserAgent() userAgent: string) {
     return this.authService.login({ ...body, ip, userAgent })
@@ -150,7 +155,7 @@ export class AuthController {
 
   @IsPublic()
   @Get('facebook')
-  async getFacebookLink(@Ip() ip: string, @UserAgent() userAgent: string) {
+  getFacebookLink(@Ip() ip: string, @UserAgent() userAgent: string) {
     return this.facebookService.getFacebookLink({ ip, userAgent })
   }
 
@@ -169,6 +174,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @ZodSerializerDto(GetAuthMeResDTO)
   getProfile(@ActiveUser('userId') userId: number) {
     return this.authService.getProfile(userId)
   }

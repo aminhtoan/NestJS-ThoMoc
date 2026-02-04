@@ -4,6 +4,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 import { TypeofVerificationCodeType } from '../../../shared/constants/auth.constant'
 import {
   DeiviceType,
+  GetAuthMeResType,
   RefreshTokenType,
   ResgisterBodyType,
   RoleType,
@@ -141,7 +142,7 @@ export class AuthRespository {
     })
   }
 
-  async findDeviceById(deviceId: number) {
+  async findDeviceById(deviceId: number): Promise<DeiviceType> {
     return this.prismaService.device.findFirstOrThrow({
       where: {
         id: deviceId,
@@ -158,7 +159,7 @@ export class AuthRespository {
   }
 
   // loại bỏ pass và totpSecret khi trả về
-  async omitUserSensitiveInfo(userId: number): Promise<Omit<UserType, 'password' | 'totpSecret'>> {
+  async omitUserSensitiveInfo(userId: number): Promise<GetAuthMeResType | null> {
     return this.prismaService.user.findUnique({
       where: {
         id: userId,
@@ -166,6 +167,14 @@ export class AuthRespository {
       omit: {
         password: true,
         totpSecret: true,
+      },
+      include: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     })
   }

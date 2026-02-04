@@ -209,6 +209,14 @@ export const TwoFactorSetupResSchema = z.object({
   uri: z.string().optional(),
 })
 
+export const GetAuthMeResSchema = ResgisterResSchema.extend({
+  role: RoleSchema.pick({
+    id: true,
+    name: true,
+  }),
+})
+
+export type GetAuthMeResType = z.infer<typeof GetAuthMeResSchema>
 export type RoleType = z.infer<typeof RoleSchema>
 export type UserType = z.infer<typeof UserSchema>
 export type ResgisterBodyType = z.infer<typeof ResgisterBodySchema>

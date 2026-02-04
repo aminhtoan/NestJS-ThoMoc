@@ -13,6 +13,7 @@ import envConfig from 'src/shared/config'
 import { TypeofVerificationCode, TypeofVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { TypeTempRedis } from 'src/shared/constants/redis.constant'
 import { generateOTP, isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
+import { SharedRolesRepo } from 'src/shared/repositories/shared-roles.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { SendEmail } from 'src/shared/services/email.service'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -32,9 +33,6 @@ import {
 } from '../models/auth.model'
 import { AuthRespository } from '../repository/auth.repo'
 import { TwoFactorAuthService } from './two-factor.service'
-import { SharedRolesRepo } from 'src/shared/repositories/shared-roles.repo'
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Cache } from 'cache-manager'
 
 interface CreateUserInput {
   name: string
@@ -97,6 +95,18 @@ export class AuthService {
     return verificationCode
   }
 
+  async registerVerify(body: { email: string; code: string }) {
+    await this.validateVerificationCode({
+      email: body.email,
+      code: body.code,
+      type: TypeofVerificationCode.REGISTER,
+    })
+
+    return {
+      message: 'OTP hợp lệ',
+    }
+  }
+
   async register(body: ResgisterBodyType) {
     try {
       // tạo verification code và kiểm tra ...
@@ -110,7 +120,7 @@ export class AuthService {
       const clientRoleId = await this.sharedRolesRepo.getClientRoleId()
 
       // hash password
-      const hashedPassword = await this.hashingService.hash(body.password)
+      const hashedPassword = this.hashingService.hash(body.password)
 
       // desttructuring, loại bỏ  confirmPassword, code
       const { confirmPassword, code, ...restBody } = body
