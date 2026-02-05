@@ -216,6 +216,18 @@ export const GetAuthMeResSchema = ResgisterResSchema.extend({
   }),
 })
 
+export const CreateUserBodySchema = UserSchema.pick({
+  email: true,
+  name: true,
+  phoneNumber: true,
+  password: true,
+  avatar: true,
+  // status: true,
+}).strict()
+
+export const UpdateUserBodySchema = CreateUserBodySchema.partial()
+
+export type UpdateUserBodyType = z.infer<typeof UpdateUserBodySchema>
 export type GetAuthMeResType = z.infer<typeof GetAuthMeResSchema>
 export type RoleType = z.infer<typeof RoleSchema>
 export type UserType = z.infer<typeof UserSchema>

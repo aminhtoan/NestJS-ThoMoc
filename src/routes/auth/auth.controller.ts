@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Ip, Post, Query, Res } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Ip, Post, Put, Query, Res } from '@nestjs/common'
 import type { Response } from 'express'
 import { ZodSerializerDto } from 'nestjs-zod'
 import type { RedisClientType } from 'redis'
@@ -24,6 +24,7 @@ import {
   ResetPasswordBodyDTO,
   SendOTPBodyDTO,
   TwoFactorSetupResDTO,
+  UpdateUserBodyDTO,
   VerifyLoginBodyDTO,
   VerifyResetCodeBodyDTO,
 } from './dto/auth.dto'
@@ -177,5 +178,11 @@ export class AuthController {
   @ZodSerializerDto(GetAuthMeResDTO)
   getProfile(@ActiveUser('userId') userId: number) {
     return this.authService.getProfile(userId)
+  }
+
+  @Put('myProfile')
+  @ZodSerializerDto(MessageResDto)
+  updateProfile(@Body() body: UpdateUserBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.authService.updateProfile(userId, body)
   }
 }

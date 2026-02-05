@@ -28,6 +28,7 @@ import {
   ResetPasswordBodyType,
   ResgisterBodyType,
   SendOTPBodyType,
+  UpdateUserBodyType,
   VerifyLoginBodyType,
   VerifyResetCodeBodyType,
 } from '../models/auth.model'
@@ -714,5 +715,15 @@ export class AuthService {
       throw new UnauthorizedException('User not found')
     }
     return user
+  }
+
+  async updateProfile(userId: number, body: UpdateUserBodyType) {
+    try {
+      await this.authRespository.updateUser({ id: userId }, body)
+      return { message: 'Cập nhật thông tin thành công' }
+    } catch (error) {
+      console.error('[AuthService:UpdateProfile]', error)
+      throw error
+    }
   }
 }
