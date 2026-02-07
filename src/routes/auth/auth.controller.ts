@@ -53,8 +53,8 @@ export class AuthController {
   @IsPublic()
   @Post('/otp/verify')
   @ZodSerializerDto(MessageResDto)
-  registerVerify(@Body() body: { email: string; code: string }) {
-    return this.authService.registerVerify(body)
+  verifyOTP(@Body() body: { email: string; code: string; type: string }) {
+    return this.authService.verifyOTP(body)
   }
 
   @IsPublic()
@@ -62,6 +62,13 @@ export class AuthController {
   @ZodSerializerDto(MessageResDto)
   sendOTP(@Body() body: SendOTPBodyDTO) {
     return this.authService.sendOTP(body)
+  }
+
+  @IsPublic()
+  @Post('verify-email')
+  @ZodSerializerDto(MessageResDto)
+  verifyEmail(@Body() body: { email: string }) {
+    return this.authService.verifyEmail(body)
   }
 
   @IsPublic()

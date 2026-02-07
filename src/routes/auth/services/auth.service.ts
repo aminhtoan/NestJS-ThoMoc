@@ -96,13 +96,20 @@ export class AuthService {
     return verificationCode
   }
 
-  async registerVerify(body: { email: string; code: string }) {
+  async verifyOTP(body: { email: string; code: string; type: string }) {
     await this.validateVerificationCode({
       email: body.email,
       code: body.code,
-      type: TypeofVerificationCode.REGISTER,
+      type: body.type as TypeofVerificationCodeType,
     })
 
+    await this.authRespository.deleleVerificationCode({
+      email_code_type: {
+        email: body.email,
+        code: body.code,
+        type: body.type as TypeofVerificationCodeType,
+      },
+    })
     return {
       message: 'OTP hợp lệ',
     }
@@ -724,6 +731,20 @@ export class AuthService {
     } catch (error) {
       console.error('[AuthService:UpdateProfile]', error)
       throw error
+    }
+  }
+
+  async verifyEmail(body: { email: string }) {
+    const user = await this.authRespository.verifyEmail({ email: body.email })
+    if (user) {
+      throw new UnprocessableEntityException([
+        {
+          message: 'Email đã tồn tại',
+        },
+      ])
+    }
+    return {
+      message: 'Email hợp lệ',
     }
   }
 }

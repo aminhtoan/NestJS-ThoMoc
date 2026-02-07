@@ -178,4 +178,16 @@ export class AuthRespository {
       },
     })
   }
+
+  async verifyEmail(body: { email: string }) {
+    return this.prismaService.user.findUnique({
+      where: {
+        email: body.email,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    })
+  }
 }
