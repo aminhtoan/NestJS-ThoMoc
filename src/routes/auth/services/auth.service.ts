@@ -747,4 +747,25 @@ export class AuthService {
       message: 'Email hợp lệ',
     }
   }
+
+  async changePassword(userId: number, oldPassword: string, newPassword: string) {
+    const user = await this.authRespository.findUniqueUserIncludeRole({ id: userId })
+
+    const isMatch = await this.hashingService.compare(oldPassword, user.password)
+    if (!isMatch) {
+      throw new UnprocessableEntityException([
+        {
+          field: 'oldPassword',
+          message: 'Mật khẩu cũ không đúng',
+        },
+      ])
+    }
+
+    const hashedNewPassword = await this.hashingService.hash(newPassword)
+    await this.authRespository.updateUser({ id: userId }, { password: hashedNewPassword })
+
+    return {
+      message: 'Đổi mật khẩu thành công',
+    }
+  }
 }

@@ -225,8 +225,33 @@ export const CreateUserBodySchema = UserSchema.pick({
   // status: true,
 }).strict()
 
-export const UpdateUserBodySchema = CreateUserBodySchema.partial()
+export const UpdateUserBodySchema = CreateUserBodySchema.partial().omit({
+  password: true,
+})
 
+export const ChangePasswordBodySchema = z
+  .object({
+    oldPassword: z
+      .string()
+      .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
+      .max(50, 'Mật khẩu không được quá 50 ký tự')
+      .regex(REGEX.password, 'Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt'),
+    newPassword: z
+      .string()
+      .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
+      .max(50, 'Mật khẩu không được quá 50 ký tự')
+      .regex(REGEX.password, 'Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt'),
+  })
+  .superRefine(({ newPassword, oldPassword }, ctx) => {
+    if (newPassword === oldPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Mật khẩu mới phải khác mật khẩu cũ',
+      })
+    }
+  })
+
+export type ChangePasswordBodyType = z.infer<typeof ChangePasswordBodySchema>
 export type UpdateUserBodyType = z.infer<typeof UpdateUserBodySchema>
 export type GetAuthMeResType = z.infer<typeof GetAuthMeResSchema>
 export type RoleType = z.infer<typeof RoleSchema>

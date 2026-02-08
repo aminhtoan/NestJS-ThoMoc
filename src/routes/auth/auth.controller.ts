@@ -10,6 +10,7 @@ import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
 import { MessageResDto } from 'src/shared/dtos/response.dto'
 import { REDIS_CLIENT } from 'src/shared/services/redis.service'
 import {
+  ChangePasswordBodyDTO,
   DisableTwoFactorBodyDTO,
   ForgotPasswordBodyDTO,
   GetAuthMeResDTO,
@@ -191,5 +192,11 @@ export class AuthController {
   @ZodSerializerDto(MessageResDto)
   updateProfile(@Body() body: UpdateUserBodyDTO, @ActiveUser('userId') userId: number) {
     return this.authService.updateProfile(userId, body)
+  }
+
+  @Put('change-password')
+  @ZodSerializerDto(MessageResDto)
+  changePassword(@Body() body: ChangePasswordBodyDTO, @ActiveUser('userId') userId: number) {
+    return this.authService.changePassword(userId, body.oldPassword, body.newPassword)
   }
 }

@@ -17,6 +17,7 @@ import {
   ResetPasswordBodySchema,
   GetAuthMeResSchema,
   UpdateUserBodySchema,
+  ChangePasswordBodySchema,
 } from '../models/auth.model'
 import { createZodDto } from 'nestjs-zod'
 
@@ -57,3 +58,5 @@ export class ResetPasswordBodyDTO extends createZodDto(ResetPasswordBodySchema) 
 export class GetAuthMeResDTO extends createZodDto(GetAuthMeResSchema) {}
 
 export class UpdateUserBodyDTO extends createZodDto(UpdateUserBodySchema) {}
+
+export class ChangePasswordBodyDTO extends createZodDto(ChangePasswordBodySchema) {}
