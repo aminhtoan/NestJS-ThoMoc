@@ -65,14 +65,14 @@ export class RoleRepository {
     }
 
     // If isActive is being set to true, clear the deletedAt timestamp
-    if (data.isActive === true) {
-      updatePayload.deletedAt = null
-    }
+    // if (data.isActive === true) {
+    //   updatePayload.deletedAt = null
+    // }
 
-    if (data.isActive === false) {
-      updatePayload.deletedAt = new Date()
-      updatePayload.deletedById = data.updatedById
-    }
+    // if (data.isActive === false) {
+    //   updatePayload.deletedAt = new Date()
+    //   updatePayload.deletedById = data.updatedById
+    // }
 
     if ('permissionIds' in data && data.permissionIds !== undefined) {
       if (data.permissionIds.length > 0) {

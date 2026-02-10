@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { UserType } from 'src/shared/models/shared-user.model'
+import { PrismaService } from 'src/shared/services/prisma.service'
 import {
   CreatePermissionBodyType,
   CreatePermissionResType,
+  GetAllPermissionResType,
   GetPermissionDetailResType,
   GetPermissionParamType,
   GetPermissionQueryResType,
@@ -9,8 +12,6 @@ import {
   PermissionType,
   UpdatePermissionBodyType,
 } from './permission.model'
-import { PrismaService } from 'src/shared/services/prisma.service'
-import { UserType } from 'src/shared/models/shared-user.model'
 
 @Injectable()
 export class PermissionRepository {
@@ -43,6 +44,22 @@ export class PermissionRepository {
       totalItems,
       totalPages,
     }
+  }
+
+  listAll(): Promise<GetAllPermissionResType[]> {
+    return this.prismaService.permission.findMany({
+      where: {
+        deletedAt: null,
+      },
+      omit: {
+        createdById: true,
+        updatedById: true,
+        deletedById: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      },
+    })
   }
 
   findById(params: GetPermissionParamType): Promise<GetPermissionDetailResType> {

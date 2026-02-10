@@ -178,7 +178,7 @@ export class RoleService {
     }
 
     try {
-      const hard = false
+      const hard = true
       await this.roleRepository.delete(userId, params, hard)
 
       return {

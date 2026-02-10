@@ -24,6 +24,15 @@ export class PermissionService {
     }
   }
 
+  async listAll() {
+    try {
+      const res = await this.permissionRepository.listAll()
+      return res
+    } catch (error) {
+      throw error
+    }
+  }
+
   async findById(permissionId: GetPermissionParamType) {
     try {
       const res = await this.permissionRepository.findById(permissionId)

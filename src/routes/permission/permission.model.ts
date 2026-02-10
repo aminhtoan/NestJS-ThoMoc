@@ -53,6 +53,16 @@ export const UpdatePermissionBodySchema = PermissionSchema.pick({
   method: true,
 }).partial()
 
+export const GetAllPermissionRes = PermissionSchema.omit({
+  createdById: true,
+  updatedById: true,
+  deletedById: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+})
+
+export type GetAllPermissionResType = z.infer<typeof GetAllPermissionRes>
 export type PermissionType = z.infer<typeof PermissionSchema>
 export type GetPermissionQueryType = z.infer<typeof GetPermissionQuerySchema>
 export type GetPermissionQueryResType = z.infer<typeof GetPermissionQueryResSchema>
