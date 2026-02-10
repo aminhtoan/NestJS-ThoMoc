@@ -26,9 +26,9 @@ import * as path from 'path'
 import { CacheModule } from '@nestjs/cache-manager'
 import { PaymentModule } from './routes/payment/payment.module'
 import { BullModule } from '@nestjs/bullmq'
-import { WebsocketsModule } from './websockets/websockets.module';
-import { ReviewModule } from './routes/review/review.module';
-import { MessageModule } from './routes/message/message.module';
+import { WebsocketsModule } from './websockets/websockets.module'
+import { ReviewModule } from './routes/review/review.module'
+import { MessageModule } from './routes/message/message.module'
 import envConfig from './shared/config'
 
 @Module({

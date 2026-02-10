@@ -9,6 +9,7 @@ import {
   GetRoleQueryResType,
 } from './role.model'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class RoleRepository {
@@ -115,20 +116,36 @@ export class RoleRepository {
         })
   }
 
-  async list({ page, limit }: GetRoleQueryType): Promise<GetRoleQueryResType> {
+  async list({ page, limit, search }: GetRoleQueryType): Promise<GetRoleQueryResType> {
     const offset = (page - 1) * limit
+
+    const where: Prisma.RoleWhereInput = {
+      deletedAt: null,
+      ...(search && {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            description: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      }),
+    }
 
     const [totalItems, data] = await Promise.all([
       this.prismaService.role.count({
-        where: {
-          deletedAt: null,
-        },
+        where,
       }),
 
       this.prismaService.role.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where,
         skip: offset,
         take: limit,
         include: {
@@ -138,8 +155,12 @@ export class RoleRepository {
             },
           },
         },
+        orderBy: {
+          createdAt: 'asc',
+        },
       }),
     ])
+
     const totalPages = Math.ceil(totalItems / limit)
 
     return {
