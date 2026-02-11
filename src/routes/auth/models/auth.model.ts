@@ -127,6 +127,15 @@ export const RefreshTokenSchema = z.object({
   createdAt: z.date(),
 })
 
+// permission
+export const PermissionSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  path: z.string(),
+  method: z.string(),
+  module: z.string(),
+})
+
 // role
 export const RoleSchema = z.object({
   id: z.number(),
@@ -213,6 +222,15 @@ export const GetAuthMeResSchema = ResgisterResSchema.extend({
   role: RoleSchema.pick({
     id: true,
     name: true,
+  }).extend({
+    permissions: z.array(
+      PermissionSchema.pick({
+        id: true,
+        path: true,
+        method: true,
+        module: true,
+      }),
+    ),
   }),
 })
 

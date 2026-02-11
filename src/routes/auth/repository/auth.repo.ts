@@ -173,6 +173,14 @@ export class AuthRespository {
           select: {
             id: true,
             name: true,
+            permissions: {
+              select: {
+                id: true,
+                path: true,
+                method: true,
+                module: true,
+              },
+            },
           },
         },
       },
