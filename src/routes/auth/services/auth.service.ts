@@ -234,6 +234,15 @@ export class AuthService {
       ])
     }
 
+    if (user.status !== 'ACTIVE') {
+      throw new UnprocessableEntityException([
+        {
+          field: 'email',
+          error: 'Tài khoản của bạn đã bị vô hiệu hóa, vui lòng liên hệ quản trị viên',
+        },
+      ])
+    }
+
     // 2. Check password
     const isMatch = await this.hashingService.compare(password, user.password)
     if (!isMatch) {

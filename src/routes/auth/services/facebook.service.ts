@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 import envConfig from 'src/shared/config'
 import { AuthRespository } from '../repository/auth.repo'
 import { RolesService } from './roles.service'
@@ -72,6 +72,15 @@ export class FacebookService {
         email: fbUser.email,
       })
 
+      if (user.status === 'INACTIVE') {
+        throw new UnprocessableEntityException([
+          {
+            field: 'email',
+            error: 'Tài khoản của bạn đã bị vô hiệu hóa, vui lòng liên hệ quản trị viên',
+          },
+        ])
+      }
+      
       // 5) Nếu chưa có -> tạo user mới
       if (!user) {
         const clientRoleId = await this.rolesService.getClientRoleId()

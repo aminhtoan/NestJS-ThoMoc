@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 import envConfig from 'src/shared/config'
 import { GoogleAuthStateType } from '../models/auth.model'
 import { AuthRespository } from '../repository/auth.repo'
@@ -74,6 +74,15 @@ export class GoogleService {
       let user = await this.authRespository.findUniqueUserIncludeRole({
         email: data.email,
       })
+
+      if (user.status === 'INACTIVE') {
+        throw new UnprocessableEntityException([
+          {
+            field: 'email',
+            error: 'Tài khoản của bạn đã bị vô hiệu hóa, vui lòng liên hệ quản trị viên',
+          },
+        ])
+      }
 
       if (!user) {
         const clientRoleId = await this.rolesService.getClientRoleId()

@@ -62,7 +62,7 @@ import envConfig from './shared/config'
       throttlers: [
         {
           ttl: 1000 * 60,
-          limit: 10,
+          limit: 100,
         },
       ],
     }),
