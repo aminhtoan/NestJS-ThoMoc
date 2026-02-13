@@ -8,6 +8,7 @@ import {
   UpdateUserBodyType,
   UserResponseType,
 } from './user.model'
+import { Prisma, UserStatus } from '@prisma/client'
 
 @Injectable()
 export class UserRepository {
@@ -61,19 +62,55 @@ export class UserRepository {
         })
   }
 
-  async findPagination({ page, limit }: GetUserQueryType, languageId: string): Promise<GetUserQueryResType> {
+  async findPagination(query: GetUserQueryType, languageId: string): Promise<GetUserQueryResType> {
+    const { page, limit, search, status, roleId } = query
     const offset = (page - 1) * limit
 
+    // Xây dựng điều kiện where chung
+    const whereCondition: Prisma.UserWhereInput = {
+      deletedAt: null,
+    }
+
+    // Thêm status filter
+    if (status !== undefined) {
+      whereCondition.status = status
+    }
+
+    // Thêm roleId filter
+    if (roleId) {
+      whereCondition.roleId = roleId
+    }
+
+    // Xử lý search
+    if (search) {
+      const searchConditions: Prisma.UserWhereInput[] = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phoneNumber: { contains: search, mode: 'insensitive' } },
+        { role: { name: { contains: search, mode: 'insensitive' } } },
+      ]
+
+      // Kiểm tra nếu search là status
+      const upperSearch = search.toUpperCase()
+      const statusKeywords = ['ACTIVE', 'INACTIVE', 'BLOCKED']
+
+      // Tìm status có chứa search text
+      const matchedStatus = statusKeywords.find((status) => status.includes(upperSearch))
+
+      if (matchedStatus) {
+        searchConditions.push({ status: matchedStatus as UserStatus })
+      }
+
+      whereCondition.OR = searchConditions
+    }
+
+    // Chạy đồng thời count và findMany với CÙNG điều kiện where
     const [totalItems, data] = await Promise.all([
       this.prismaService.user.count({
-        where: {
-          deletedAt: null,
-        },
+        where: whereCondition,
       }),
       this.prismaService.user.findMany({
-        where: {
-          deletedAt: null,
-        },
+        where: whereCondition,
         skip: offset,
         take: limit,
         include: {
@@ -81,6 +118,9 @@ export class UserRepository {
           userTranslations: {
             where: languageId ? { deletedAt: null, languageId } : { deletedAt: null },
           },
+        },
+        orderBy: {
+          createdAt: 'asc', // Thêm sắp xếp
         },
       }),
     ])

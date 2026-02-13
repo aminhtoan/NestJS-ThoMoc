@@ -72,7 +72,7 @@ export class FacebookService {
         email: fbUser.email,
       })
 
-      if (user.status === 'INACTIVE') {
+      if (user.status === 'BLOCKED') {
         throw new UnprocessableEntityException([
           {
             field: 'email',
@@ -80,7 +80,7 @@ export class FacebookService {
           },
         ])
       }
-      
+
       // 5) Nếu chưa có -> tạo user mới
       if (!user) {
         const clientRoleId = await this.rolesService.getClientRoleId()

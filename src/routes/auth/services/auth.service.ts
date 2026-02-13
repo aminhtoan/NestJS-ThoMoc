@@ -234,7 +234,7 @@ export class AuthService {
       ])
     }
 
-    if (user.status !== 'ACTIVE') {
+    if (user.status === 'BLOCKED') {
       throw new UnprocessableEntityException([
         {
           field: 'email',
@@ -480,6 +480,13 @@ export class AuthService {
       await this.authRespository.updateDevice(ref.deviceId, {
         isActive: false,
       })
+
+      await this.authRespository.updateUser(
+        { id: ref.userId },
+        {
+          status: 'INACTIVE',
+        },
+      )
 
       return { message: 'Logout successful' }
     } catch (error) {

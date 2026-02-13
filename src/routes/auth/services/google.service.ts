@@ -75,7 +75,7 @@ export class GoogleService {
         email: data.email,
       })
 
-      if (user.status === 'INACTIVE') {
+      if (user.status === 'BLOCKED') {
         throw new UnprocessableEntityException([
           {
             field: 'email',
@@ -87,7 +87,7 @@ export class GoogleService {
       if (!user) {
         const clientRoleId = await this.rolesService.getClientRoleId()
         const randomPassword = uuidv4()
-        const hashPass = await this.hashingService.hash(randomPassword)
+        const hashPass = this.hashingService.hash(randomPassword)
 
         user = await this.authRespository.createUserWithGoogle({
           email: data.email,
@@ -112,8 +112,7 @@ export class GoogleService {
         roleName: user.role.name,
       })
       return authtokens
-    } catch (error) {
-      console.error('[Google Auth Error]', error.message)
+    } catch {
       throw new Error('Đăng nhập bằng google thất bại')
     }
   }
