@@ -29,6 +29,7 @@ import { BullModule } from '@nestjs/bullmq'
 import { WebsocketsModule } from './websockets/websockets.module'
 import { ReviewModule } from './routes/review/review.module'
 import { MessageModule } from './routes/message/message.module'
+import { DeliveryMethodModule } from './routes/delivery-method/delivery-method.module'
 import envConfig from './shared/config'
 
 @Module({
@@ -81,6 +82,7 @@ import envConfig from './shared/config'
     WebsocketsModule,
     ReviewModule,
     MessageModule,
+    DeliveryMethodModule,
   ],
   controllers: [AppController],
   providers: [

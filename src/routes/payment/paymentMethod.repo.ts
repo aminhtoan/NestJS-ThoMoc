@@ -18,7 +18,7 @@ export class PaymentMethodRepository {
       })
     } catch (error) {
       if (isUniqueConstraintError(error)) {
-        throw new ConflictException('Phương thức thanh toán đã tồn tại')
+        throw new ConflictException('Phương thức thanh toán đã tồn tại, vui lòng chọn mã khác hoặc tên khác')
       }
       throw error
     }
@@ -27,11 +27,10 @@ export class PaymentMethodRepository {
   async findAll(where?: Prisma.PaymentMethodWhereInput) {
     return await this.prismaService.paymentMethod.findMany({
       where: {
-        deletedAt: null,
         ...where,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
     })
   }
@@ -73,7 +72,7 @@ export class PaymentMethodRepository {
       })
     } catch (error) {
       if (isUniqueConstraintError(error)) {
-        throw new ConflictException('Phương thức thanh toán đã tồn tại')
+        throw new ConflictException('Phương thức thanh toán đã tồn tại, vui lòng chọn mã khác hoặc tên khác')
       }
       throw error
     }

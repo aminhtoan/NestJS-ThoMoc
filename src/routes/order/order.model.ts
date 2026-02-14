@@ -90,12 +90,20 @@ export const CreateOrderBodySchema = z
       }),
       cartItemIds: z.array(z.number()).min(1),
       paymentMethodCode: z.string().min(1), // COD, BANK_TRANSFER, etc.
+      deliveryMethodCode: z.string().min(1), // STANDARD, EXPRESS, etc.
     }),
   )
   .min(1)
 
 export const CreateOrderResSchema = z.object({
-  data: z.array(OrderSchema.extend({ paymentId: z.number().optional() })),
+  data: z.array(
+    OrderSchema.extend({
+      paymentId: z.number().optional(),
+      totalAmount: z.number().optional(),
+      productTotal: z.number().optional(),
+      shippingFee: z.number().optional(),
+    }),
+  ),
 })
 
 export const CancelOrderResSchema = OrderSchema

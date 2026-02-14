@@ -6,6 +6,7 @@ import { BullModule } from '@nestjs/bullmq'
 import { PAYMENT_queue_name } from 'src/shared/constants/payment.constant'
 import { OrderProducer } from './order.producer'
 import { PaymentModule } from '../payment/payment.module'
+import { DeliveryMethodModule } from '../delivery-method/delivery-method.module'
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PaymentModule } from '../payment/payment.module'
       name: PAYMENT_queue_name,
     }),
     forwardRef(() => PaymentModule),
+    DeliveryMethodModule,
   ],
   controllers: [OrderController],
   exports: [OrderProducer],

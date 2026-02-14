@@ -3,6 +3,7 @@ import { PaymentStatus } from '@prisma/client'
 import { ORDER_STATUS, OrderStatusType } from 'src/shared/constants/order.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { PaymentMethodRepository } from '../payment/paymentMethod.repo'
+import { DeliveryMethodRepository } from '../delivery-method/delivery-method.repo'
 import {
   CancelOrderResType,
   CreateOrderBodyType,
@@ -16,6 +17,7 @@ export class OrderRepository {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paymentMethodRepo: PaymentMethodRepository,
+    private readonly deliveryMethodRepo: DeliveryMethodRepository,
   ) {}
 
   async list({
@@ -87,6 +89,24 @@ export class OrderRepository {
 
       // Tạo map để dễ tra cứu payment method
       const paymentMethodMap = new Map(paymentMethods.filter(Boolean).map((pm) => [pm!.code, pm!]))
+
+      // Validate các delivery method codes
+      const deliveryMethodCodes = [...new Set(body.map((item) => item.deliveryMethodCode))]
+      const deliveryMethods = await Promise.all(
+        deliveryMethodCodes.map((code) => this.deliveryMethodRepo.findByCode(code)),
+      )
+
+      for (const deliveryMethod of deliveryMethods) {
+        if (!deliveryMethod) {
+          throw new BadRequestException('Phương thức vận chuyển không tồn tại')
+        }
+        if (!deliveryMethod.isActive) {
+          throw new BadRequestException(`Phương thức vận chuyển ${deliveryMethod.name} đã bị vô hiệu hóa`)
+        }
+      }
+
+      // Tạo map để dễ tra cứu delivery method
+      const deliveryMethodMap = new Map(deliveryMethods.filter(Boolean).map((dm) => [dm!.code, dm!]))
 
       // lấy ra các id cartItem trong tất cả các group đóng lại thành 1 mảng
       const allCartItemsId = body.flatMap((item) => item.cartItemIds)
@@ -163,21 +183,25 @@ export class OrderRepository {
       }
 
       const orders = await Promise.all(
-        body.map((item) => {
+        body.map(async (item) => {
           const groupCartItems = item.cartItemIds.map((id) => cartItemMap.get(id)).filter(Boolean)
 
-          // Tính tổng tiền cho order này
-          const totalAmount = groupCartItems.reduce(
+          // Tính tổng tiền sản phẩm cho order này
+          const productTotal = groupCartItems.reduce(
             (total, cartItem) => total + cartItem!.sku.price * cartItem!.quantity,
             0,
           )
 
           const paymentMethod = paymentMethodMap.get(item.paymentMethodCode)!
+          const deliveryMethod = deliveryMethodMap.get(item.deliveryMethodCode)!
 
-          // Tạo description cho payment
-          const paymentDescription = `Thanh toán đơn hàng shop ${item.shopId} - ${paymentMethod.name}`
+          // Phí vận chuyển
+          const shippingFee = deliveryMethod.price
 
-          return tx.order.create({
+          // Tổng tiền thanh toán = tiền sản phẩm + phí vận chuyển
+          const totalAmount = productTotal + shippingFee
+
+          const order = await tx.order.create({
             data: {
               user: {
                 connect: { id: userId },
@@ -191,6 +215,10 @@ export class OrderRepository {
                 phone: item.receiver.phone,
                 address: item.receiver.address,
               },
+              deliveryMethod: {
+                connect: { id: deliveryMethod.id },
+              },
+              shippingFee: shippingFee,
               payment: {
                 create: {
                   status: PaymentStatus.PENDING,
@@ -233,8 +261,16 @@ export class OrderRepository {
                   paymentMethod: true,
                 },
               },
+              deliveryMethod: true,
             },
           })
+          // Thêm các trường productTotal, shippingFee, totalAmount vào kết quả trả về
+          return {
+            ...order,
+            productTotal,
+            shippingFee,
+            totalAmount,
+          }
         }),
       )
 

@@ -56,7 +56,6 @@ export class PaymentMethodController {
   }
 
   @Patch(':id/restore')
-  @UseGuards(AuthGuard('jwt'))
   async restorePaymentMethod(@Param('id', ParseIntPipe) id: number) {
     return await this.paymentMethodService.restorePaymentMethod(id)
   }

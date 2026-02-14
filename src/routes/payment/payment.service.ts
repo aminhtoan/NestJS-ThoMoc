@@ -1,13 +1,12 @@
-import { WebsocketsRepo } from './../../shared/repositories/shared-websocket.repo'
 import { Injectable } from '@nestjs/common'
-import { PaymentStatusRepository } from './payment.repo'
-import { WebhookPaymentType } from './payment.model'
-import { OrderProducer } from '../order/order.producer'
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 import { Server } from 'socket.io'
 import { generateRoom } from 'src/shared/helpers'
+import { OrderProducer } from '../order/order.producer'
+import { WebsocketsRepo } from './../../shared/repositories/shared-websocket.repo'
+import { WebhookPaymentType } from './payment.model'
+import { PaymentStatusRepository } from './payment.repo'
 import { PaymentMethodService } from './paymentMethod.service'
-import { PaymentMethodCode } from 'src/shared/constants/payment.constant'
 
 @Injectable()
 @WebSocketGateway({ namespace: '/payment' })
