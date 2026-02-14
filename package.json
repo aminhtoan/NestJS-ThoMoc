@@ -8,6 +8,7 @@
   "scripts": {
     "init-seed-data": "ts-node initialScript",
     "create-permission": "ts-node initialScript/create-permission.ts",
+    "seed-payment-methods": "ts-node initialScript/seed-payment-methods.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

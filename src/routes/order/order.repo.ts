@@ -1,5 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { PaymentStatus } from '@prisma/client'
+import { ORDER_STATUS, OrderStatusType } from 'src/shared/constants/order.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { PaymentMethodRepository } from '../payment/paymentMethod.repo'
 import {
   CancelOrderResType,
   CreateOrderBodyType,
@@ -7,12 +10,13 @@ import {
   GetOrderDetailResType,
   GetOrderListResType,
 } from './order.model'
-import { Order, PaymentStatus } from '@prisma/client'
-import { ORDER_STATUS, OrderStatusType } from 'src/shared/constants/order.constant'
 
 @Injectable()
 export class OrderRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly paymentMethodRepo: PaymentMethodRepository,
+  ) {}
 
   async list({
     userId,
@@ -47,9 +51,6 @@ export class OrderRepository {
         omit: {
           receiver: true,
           deletedAt: true,
-          // deletedById: true,
-          // createdById: true,
-          // updatedById: true,
         },
       }),
     ])
@@ -68,6 +69,25 @@ export class OrderRepository {
     body: CreateOrderBodyType, // Array group theo shop
   ): Promise<CreateOrderResType> {
     return await this.prismaService.$transaction(async (tx) => {
+      // Validate các payment method codes trước khi xử lý
+      const paymentMethodCodes = [...new Set(body.map((item) => item.paymentMethodCode))]
+      const paymentMethods = await Promise.all(
+        paymentMethodCodes.map((code) => this.paymentMethodRepo.findByCode(code)),
+      )
+
+      // Kiểm tra tất cả payment methods có tồn tại và active không
+      for (const paymentMethod of paymentMethods) {
+        if (!paymentMethod) {
+          throw new BadRequestException('Phương thức thanh toán không tồn tại')
+        }
+        if (!paymentMethod.isActive) {
+          throw new BadRequestException(`Phương thức thanh toán ${paymentMethod.name} đã bị vô hiệu hóa`)
+        }
+      }
+
+      // Tạo map để dễ tra cứu payment method
+      const paymentMethodMap = new Map(paymentMethods.filter(Boolean).map((pm) => [pm!.code, pm!]))
+
       // lấy ra các id cartItem trong tất cả các group đóng lại thành 1 mảng
       const allCartItemsId = body.flatMap((item) => item.cartItemIds)
 
@@ -143,8 +163,21 @@ export class OrderRepository {
       }
 
       const orders = await Promise.all(
-        body.map((item) =>
-          tx.order.create({
+        body.map((item) => {
+          const groupCartItems = item.cartItemIds.map((id) => cartItemMap.get(id)).filter(Boolean)
+
+          // Tính tổng tiền cho order này
+          const totalAmount = groupCartItems.reduce(
+            (total, cartItem) => total + cartItem!.sku.price * cartItem!.quantity,
+            0,
+          )
+
+          const paymentMethod = paymentMethodMap.get(item.paymentMethodCode)!
+
+          // Tạo description cho payment
+          const paymentDescription = `Thanh toán đơn hàng shop ${item.shopId} - ${paymentMethod.name}`
+
+          return tx.order.create({
             data: {
               user: {
                 connect: { id: userId },
@@ -159,21 +192,25 @@ export class OrderRepository {
                 address: item.receiver.address,
               },
               payment: {
-                create: { status: PaymentStatus.PENDING },
+                create: {
+                  status: PaymentStatus.PENDING,
+                  paymentMethodId: paymentMethod.id,
+                  amount: totalAmount,
+                },
               },
 
               items: {
                 create: item.cartItemIds.map((cartItemId) => {
                   const cartItem = cartItemMap.get(cartItemId)
                   return {
-                    productName: cartItem.sku.product.name,
-                    skuPrice: cartItem.sku.price,
-                    image: cartItem.sku.image,
-                    skuValue: cartItem.sku.value,
-                    skuId: cartItem.skuId,
-                    productId: cartItem.sku.product.id,
-                    quantity: cartItem.quantity,
-                    productTranslations: cartItem.sku.product.productTranslations.map((pt) => {
+                    productName: cartItem!.sku.product.name,
+                    skuPrice: cartItem!.sku.price,
+                    image: cartItem!.sku.image,
+                    skuValue: cartItem!.sku.value,
+                    skuId: cartItem!.skuId,
+                    productId: cartItem!.sku.product.id,
+                    quantity: cartItem!.quantity,
+                    productTranslations: cartItem!.sku.product.productTranslations.map((pt) => {
                       return {
                         name: pt.name,
                         description: pt.description,
@@ -186,13 +223,19 @@ export class OrderRepository {
               products: {
                 connect: item.cartItemIds.map((cartItemId) => {
                   const cartItem = cartItemMap.get(cartItemId)
-                  return { id: cartItem.sku.product.id }
+                  return { id: cartItem!.sku.product.id }
                 }),
               },
             },
-            include: { payment: true },
-          }),
-        ),
+            include: {
+              payment: {
+                include: {
+                  paymentMethod: true,
+                },
+              },
+            },
+          })
+        }),
       )
 
       await tx.cartItem.deleteMany({
@@ -215,6 +258,7 @@ export class OrderRepository {
       },
       include: {
         items: true,
+        payment: true,
       },
     })
     if (!order) {

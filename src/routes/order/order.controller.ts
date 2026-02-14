@@ -40,4 +40,9 @@ export class OrderController {
   deleteOrder(@ActiveUser('userId') userId: number, @Param() params: GetOrderParamsDTO) {
     return this.orderService.cancelOrder(userId, params.orderId)
   }
+
+  // @Get('payment-qr/:orderId')
+  // async getPaymentQR(@ActiveUser('userId') userId: number, @Param() params: GetOrderParamsDTO) {
+  //   return this.orderService.getPaymentQR(userId, params)
+  // }
 }

@@ -89,6 +89,7 @@ export const CreateOrderBodySchema = z
         address: z.string(),
       }),
       cartItemIds: z.array(z.number()).min(1),
+      paymentMethodCode: z.string().min(1), // COD, BANK_TRANSFER, etc.
     }),
   )
   .min(1)
@@ -101,6 +102,7 @@ export const CancelOrderResSchema = OrderSchema
 
 export const GetOrderParamsSchema = z.object({
   orderId: z.coerce.number().int().positive(),
+  paymentId: z.coerce.number().int().positive(),
 })
 
 export type ProductSKUSnapshotType = z.infer<typeof ProductSKUSnapshotSchema>

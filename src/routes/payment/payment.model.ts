@@ -1,5 +1,30 @@
 import z from 'zod'
 
+export const PaymentMethodSchema = z.object({
+  id: z.number().int(),
+  name: z.string().max(100),
+  code: z.string().max(50),
+  isActive: z.boolean().default(true),
+  createdById: z.number().int().nullable().optional(),
+  updatedById: z.number().int().nullable().optional(),
+  deletedById: z.number().int().nullable().optional(),
+  deletedAt: z.date().nullable().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const CreatePaymentMethodSchema = z.object({
+  name: z.string().min(1).max(100),
+  code: z.string().min(1).max(50),
+  isActive: z.boolean().default(true),
+})
+
+export const UpdatePaymentMethodSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  code: z.string().min(1).max(50).optional(),
+  isActive: z.boolean().optional(),
+})
+
 export const PaymentTransactionSchema = z.object({
   id: z.number().int(),
   gateway: z.string().max(100),
@@ -46,5 +71,8 @@ export const WebhookPaymentSchema = z.object({
   description: z.string().nullable().optional(),
 })
 
+export type PaymentMethodType = z.infer<typeof PaymentMethodSchema>
+export type CreatePaymentMethodType = z.infer<typeof CreatePaymentMethodSchema>
+export type UpdatePaymentMethodType = z.infer<typeof UpdatePaymentMethodSchema>
 export type PaymentTransactionType = z.infer<typeof PaymentTransactionSchema>
 export type WebhookPaymentType = z.infer<typeof WebhookPaymentSchema>

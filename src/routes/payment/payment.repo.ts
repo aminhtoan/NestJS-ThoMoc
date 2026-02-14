@@ -3,16 +3,67 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { parse } from 'date-fns'
 import { ORDER_STATUS } from 'src/shared/constants/order.constant'
 import { PAYMENT_CODE, PaymentStatus } from 'src/shared/constants/payment.constant'
-import { MessageType } from 'src/shared/models/response.model'
+import { isUniqueConstraintError } from 'src/shared/helpers'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { WebhookPaymentType } from './payment.model'
-import { Prisma } from '@prisma/client'
-import { isRecordNotFoundError, isUniqueConstraintError } from 'src/shared/helpers'
-import { OrderProducer } from '../order/order.producer'
+
+interface CreatePaymentData {
+  paymentMethodId: number
+  amount: number
+  description?: string
+  orderIds: number[]
+}
 
 @Injectable()
 export class PaymentStatusRepository {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async createPayment(data: CreatePaymentData) {
+    const { orderIds, ...paymentData } = data
+
+    return await this.prismaService.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
+        data: {
+          ...paymentData,
+          status: PaymentStatus.PENDING,
+        },
+      })
+
+      // Connect orders to payment
+      await tx.order.updateMany({
+        where: {
+          id: { in: orderIds },
+        },
+        data: {
+          paymentId: payment.id,
+        },
+      })
+
+      return payment
+    })
+  }
+
+  async findPaymentWithDetails(paymentId: number) {
+    return await this.prismaService.payment.findUnique({
+      where: { id: paymentId },
+      include: {
+        paymentMethod: true,
+        orders: {
+          include: {
+            items: {
+              include: {
+                sku: {
+                  include: {
+                    product: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+  }
 
   async receiver(body: WebhookPaymentType): Promise<{ userId?: number; paymentId?: number; message: string }> {
     let amount_in = 0
@@ -37,6 +88,7 @@ export class PaymentStatusRepository {
     const payment = await this.prismaService.payment.findUnique({
       where: { id: paymentId },
       include: {
+        paymentMethod: true,
         orders: {
           include: {
             items: true,
