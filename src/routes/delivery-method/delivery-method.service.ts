@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { CreateDeliveryMethodType, UpdateDeliveryMethodType } from './delivery-method.model'
+import {
+  CreateDeliveryMethodType,
+  GetDeliveryMethodQueryPaginationType,
+  UpdateDeliveryMethodType,
+} from './delivery-method.model'
 import { DeliveryMethodRepository } from './delivery-method.repo'
 
 @Injectable()
@@ -10,8 +14,8 @@ export class DeliveryMethodService {
     return await this.deliveryMethodRepo.create(data, createdById)
   }
 
-  async findAll() {
-    return await this.deliveryMethodRepo.findAll()
+  async findAll(query: GetDeliveryMethodQueryPaginationType) {
+    return await this.deliveryMethodRepo.findAll(query)
   }
 
   async getActiveDeliveryMethods() {
@@ -31,15 +35,18 @@ export class DeliveryMethodService {
   }
 
   async delete(id: number, deletedById?: number) {
-    return await this.deliveryMethodRepo.delete(id, deletedById)
+    await this.deliveryMethodRepo.delete(id, deletedById)
+    return {}
   }
 
   async restore(id: number) {
-    return await this.deliveryMethodRepo.restore(id)
+    await this.deliveryMethodRepo.restore(id)
+    return {}
   }
 
   async toggleStatus(id: number, updatedById?: number) {
     const deliveryMethod = await this.deliveryMethodRepo.findById(id)
-    return await this.deliveryMethodRepo.update(id, { isActive: !deliveryMethod.isActive }, updatedById)
+    await this.deliveryMethodRepo.update(id, { isActive: !deliveryMethod.isActive }, updatedById)
+    return {}
   }
 }

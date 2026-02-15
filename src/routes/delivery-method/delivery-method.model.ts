@@ -15,6 +15,19 @@ export const DeliveryMethodSchema = z.object({
   updatedAt: z.date(),
 })
 
+export const GetQueryPagination = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+})
+
+export const GetDeliveryMethodQueryResSchema = z.object({
+  data: z.array(DeliveryMethodSchema),
+  page: z.number(),
+  limit: z.number(),
+  totalItems: z.number(),
+  totalPages: z.number(),
+})
+
 export const CreateDeliveryMethodSchema = z.object({
   name: z.string().min(1).max(100),
   code: z.string().min(1).max(50),
@@ -39,7 +52,13 @@ export const GetDeliveryMethodByCodeParamsSchema = z.object({
   code: z.string().min(1),
 })
 
+export const DeliveryRespone = DeliveryMethodSchema
+
 export type DeliveryMethodType = z.infer<typeof DeliveryMethodSchema>
 export type CreateDeliveryMethodType = z.infer<typeof CreateDeliveryMethodSchema>
 export type UpdateDeliveryMethodType = z.infer<typeof UpdateDeliveryMethodSchema>
 export type GetDeliveryMethodParamsType = z.infer<typeof GetDeliveryMethodParamsSchema>
+export type GetDeliveryMethodByCodeParamsType = z.infer<typeof GetDeliveryMethodByCodeParamsSchema>
+export type GetDeliveryMethodQueryResType = z.infer<typeof GetDeliveryMethodQueryResSchema>
+export type GetDeliveryMethodQueryPaginationType = z.infer<typeof GetQueryPagination>
+export type DeliveryMethodResponseType = z.infer<typeof DeliveryRespone>

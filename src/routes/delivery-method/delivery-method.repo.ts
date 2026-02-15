@@ -2,13 +2,18 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma } from '@prisma/client'
 import { isUniqueConstraintError } from 'src/shared/helpers'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { CreateDeliveryMethodType, UpdateDeliveryMethodType } from './delivery-method.model'
+import {
+  CreateDeliveryMethodType,
+  DeliveryMethodType,
+  GetDeliveryMethodQueryPaginationType,
+  UpdateDeliveryMethodType,
+} from './delivery-method.model'
 
 @Injectable()
 export class DeliveryMethodRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(data: CreateDeliveryMethodType, createdById?: number) {
+  async create(data: CreateDeliveryMethodType, createdById?: number): Promise<DeliveryMethodType> {
     try {
       return await this.prismaService.deliveryMethod.create({
         data: {
@@ -24,19 +29,34 @@ export class DeliveryMethodRepository {
     }
   }
 
-  async findAll(where?: Prisma.DeliveryMethodWhereInput) {
-    return await this.prismaService.deliveryMethod.findMany({
-      where: {
-        deletedAt: null,
-        ...where,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+  async findAll(query: GetDeliveryMethodQueryPaginationType, where?: Prisma.DeliveryMethodWhereInput) {
+    const ofset = (query.page - 1) * query.limit
+    const [totalItems, data] = await Promise.all([
+      this.prismaService.deliveryMethod.count({}),
+      this.prismaService.deliveryMethod.findMany({
+        where: {
+          // deletedAt: null,
+          ...where,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+        skip: ofset,
+        take: query.limit,
+      }),
+    ])
+    const totalPages = Math.ceil(totalItems / query.limit)
+
+    return {
+      data,
+      page: query.page,
+      limit: query.limit,
+      totalItems,
+      totalPages,
+    }
   }
 
-  async findById(id: number) {
+  async findById(id: number): Promise<DeliveryMethodType> {
     const deliveryMethod = await this.prismaService.deliveryMethod.findFirst({
       where: {
         id,
@@ -60,7 +80,7 @@ export class DeliveryMethodRepository {
     })
   }
 
-  async update(id: number, data: UpdateDeliveryMethodType, updatedById?: number) {
+  async update(id: number, data: UpdateDeliveryMethodType, updatedById?: number): Promise<DeliveryMethodType> {
     const deliveryMethod = await this.findById(id)
 
     try {
@@ -79,7 +99,7 @@ export class DeliveryMethodRepository {
     }
   }
 
-  async delete(id: number, deletedById?: number) {
+  async delete(id: number, deletedById?: number): Promise<DeliveryMethodType> {
     const deliveryMethod = await this.findById(id)
 
     return await this.prismaService.deliveryMethod.update({
@@ -91,7 +111,7 @@ export class DeliveryMethodRepository {
     })
   }
 
-  async restore(id: number) {
+  async restore(id: number): Promise<DeliveryMethodType> {
     return await this.prismaService.deliveryMethod.update({
       where: { id },
       data: {
@@ -102,8 +122,15 @@ export class DeliveryMethodRepository {
   }
 
   async getActiveDeliveryMethods() {
-    return await this.findAll({
-      isActive: true,
-    })
+    return await this.findAll(
+      {
+        page: 1,
+        limit: 100,
+      },
+      {
+        isActive: true,
+        deletedAt: null,
+      },
+    )
   }
 }
